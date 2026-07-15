@@ -4,9 +4,19 @@
       <div class="controls">
         <label class="select-wrap font-400">
           <div class="select-box">
-            <select v-model="selectedRegion">
-              <option value="" disabled>지역을 선택해주세요</option>
-              <option v-for="region in regions" :key="region.value" :value="region.value">{{ region.label }}</option>
+            <select v-model="selectedProvince">
+              <option value="" disabled>도/광역시를 선택해주세요</option>
+              <option v-for="province in provinceOptions" :key="province.value" :value="province.value">{{ province.label }}</option>
+            </select>
+            <span class="select-arrow">▾</span>
+          </div>
+        </label>
+
+        <label class="select-wrap font-400">
+          <div class="select-box">
+            <select v-model="selectedRegion" :disabled="!currentRegions.length">
+              <option value="" disabled>시/군/구를 선택해주세요</option>
+              <option v-for="region in currentRegions" :key="region.value" :value="region.value">{{ region.label }}</option>
             </select>
             <span class="select-arrow">▾</span>
           </div>
@@ -22,11 +32,14 @@
       </div>
 
       <div class="place-list-card">
-        <div class="section-title font-800">{{ selectedRegion }} 추천 장소</div>
-        <div class="place-list-scroll">
+        <div class="section-title font-800">{{ selectedRegionMeta?.label || selectedRegion }} 추천 장소</div>
+        <div v-if="isLoading" class="status loading">데이터를 불러오는 중입니다...</div>
+        <div v-else-if="errorMessage" class="status error">{{ errorMessage }}</div>
+        <div v-else-if="!filteredPlaces.length" class="status empty">표시할 장소가 없습니다.</div>
+        <div v-else class="place-list-scroll">
           <PlaceCard
             v-for="place in filteredPlaces"
-            :key="place.name"
+            :key="place.id || place.name"
             :image="place.image"
             :title="place.name"
             :address="place.address"
@@ -38,80 +51,203 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import LeafletMap from '../features/map/LeafletMap.vue'
 import PlaceCard from '../features/map/PlaceCard.vue'
+import { apiClient } from '../services/apiClient'
 
 const route = useRoute()
+const selectedProvince = ref('jeollabukdo')
 const selectedRegion = ref('jeonju')
-const regions = [
-  { value: 'jeonju', label: '전라북도 전주시' },
-  { value: 'gunsan', label: '전라북도 군산시' },
-  { value: 'iksan', label: '전라북도 익산시' },
-  { value: 'jeongeup', label: '전라북도 정읍시' },
-  { value: 'namwon', label: '전라북도 남원시' },
-  { value: 'gimje', label: '전라북도 김제시' },
-  { value: 'wanju', label: '전라북도 완주시' },
-  { value: 'buan', label: '전라북도 부안군' },
-  { value: 'yeosu', label: '전라남도 여수시' },
-  { value: 'gwangju', label: '광주광역시 서구' }
+const places = ref([])
+const isLoading = ref(false)
+const errorMessage = ref('')
+const provinceGroups = [
+  {
+    value: 'jeollabukdo',
+    label: '전라북도',
+    regions: [
+      { value: 'jeonju', label: '전주시', areaCode: 37, sigunguCode: 1 },
+      { value: 'gunsan', label: '군산시', areaCode: 37, sigunguCode: 2 },
+      { value: 'iksan', label: '익산시', areaCode: 37, sigunguCode: 3 },
+      { value: 'jeongeup', label: '정읍시', areaCode: 37, sigunguCode: 4 },
+      { value: 'namwon', label: '남원시', areaCode: 37, sigunguCode: 5 },
+      { value: 'gimje', label: '김제시', areaCode: 37, sigunguCode: 6 },
+      { value: 'wanju', label: '완주군', areaCode: 37, sigunguCode: 7 },
+      { value: 'jinan', label: '진안군', areaCode: 37, sigunguCode: 8 },
+      { value: 'muju', label: '무주군', areaCode: 37, sigunguCode: 9 },
+      { value: 'jangsu', label: '장수군', areaCode: 37, sigunguCode: 10 },
+      { value: 'imsil', label: '임실군', areaCode: 37, sigunguCode: 11 },
+      { value: 'sunchang', label: '순창군', areaCode: 37, sigunguCode: 12 },
+      { value: 'gochang', label: '고창군', areaCode: 37, sigunguCode: 13 },
+      { value: 'buan', label: '부안군', areaCode: 37, sigunguCode: 14 }
+    ]
+  },
+  {
+    value: 'jeollanamdo',
+    label: '전라남도',
+    regions: [
+      { value: 'mokpo', label: '목포시', areaCode: 38, sigunguCode: 1 },
+      { value: 'yeosu', label: '여수시', areaCode: 38, sigunguCode: 2 },
+      { value: 'suncheon', label: '순천시', areaCode: 38, sigunguCode: 3 },
+      { value: 'naju', label: '나주시', areaCode: 38, sigunguCode: 4 },
+      { value: 'gwangyang', label: '광양시', areaCode: 38, sigunguCode: 5 },
+      { value: 'damyang', label: '담양군', areaCode: 38, sigunguCode: 6 },
+      { value: 'gokseong', label: '곡성군', areaCode: 38, sigunguCode: 7 },
+      { value: 'gurye', label: '구례군', areaCode: 38, sigunguCode: 8 },
+      { value: 'goheung', label: '고흥군', areaCode: 38, sigunguCode: 9 },
+      { value: 'boseong', label: '보성군', areaCode: 38, sigunguCode: 10 },
+      { value: 'hwaseong', label: '화순군', areaCode: 38, sigunguCode: 11 },
+      { value: 'jangheung', label: '장흥군', areaCode: 38, sigunguCode: 12 },
+      { value: 'gangjin', label: '강진군', areaCode: 38, sigunguCode: 13 },
+      { value: 'haenam', label: '해남군', areaCode: 38, sigunguCode: 14 },
+      { value: 'yeongam', label: '영암군', areaCode: 38, sigunguCode: 15 },
+      { value: 'muan', label: '무안군', areaCode: 38, sigunguCode: 16 },
+      { value: 'hampyeong', label: '함평군', areaCode: 38, sigunguCode: 17 },
+      { value: 'yeonggwang', label: '영광군', areaCode: 38, sigunguCode: 18 },
+      { value: 'jangseong', label: '장성군', areaCode: 38, sigunguCode: 19 },
+      { value: 'wando', label: '완도군', areaCode: 38, sigunguCode: 20 },
+      { value: 'jindo', label: '진도군', areaCode: 38, sigunguCode: 21 },
+      { value: 'sinan', label: '신안군', areaCode: 38, sigunguCode: 22 }
+    ]
+  },
+  {
+    value: 'gwangju',
+    label: '광주광역시',
+    regions: [
+      { value: 'donggu', label: '동구', areaCode: 5, sigunguCode: 1 },
+      { value: 'seogu', label: '서구', areaCode: 5, sigunguCode: 2 },
+      { value: 'namgu', label: '남구', areaCode: 5, sigunguCode: 3 },
+      { value: 'bukgu', label: '북구', areaCode: 5, sigunguCode: 4 },
+      { value: 'gwangsangu', label: '광산구', areaCode: 5, sigunguCode: 5 }
+    ]
+  }
 ]
 
-const placeData = {
-  jeonju: [
-    { name: '전주한옥마을', address: '전라북도 전주시 완산구 풍남문로 4가', image: 'https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=800&q=80', lat: 35.8151, lng: 127.1530 },
-    { name: '완산공원', address: '전라북도 전주시 완산구 효자동', image: 'https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=800&q=80', lat: 35.8133, lng: 127.1206 },
-    { name: '전주월드컵경기장', address: '전라북도 전주시 덕진구', image: 'https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=800&q=80', lat: 35.8454, lng: 127.1290 },
-    { name: '전주동물원', address: '전라북도 전주시 덕진구', image: 'https://images.unsplash.com/photo-1526336024174-e58f5cdd8e13?auto=format&fit=crop&w=800&q=80', lat: 35.8470, lng: 127.1208 },
-    { name: '전주향교', address: '전라북도 전주시 완산구', image: 'https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=800&q=80', lat: 35.8175, lng: 127.1484 },
-    { name: '전주국제영화제 거리', address: '전라북도 전주시 완산구 중앙동', image: 'https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=800&q=80', lat: 35.8145, lng: 127.1478 },
-    { name: '남고산성', address: '전라북도 전주시 완산구', image: 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=800&q=80', lat: 35.8210, lng: 127.1670 },
-    { name: '전주성심당', address: '전라북도 전주시 완산구 동문동', image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=800&q=80', lat: 35.8158, lng: 127.1501 },
-    { name: '덕진공원', address: '전라북도 전주시 덕진구', image: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=800&q=80', lat: 35.8451, lng: 127.1170 },
-    { name: '전주비빔밥 거리', address: '전라북도 전주시 완산구', image: 'https://images.unsplash.com/photo-1468581264429-2548ef9eb732?auto=format&fit=crop&w=800&q=80', lat: 35.8139, lng: 127.1492 },
-    { name: '전주천', address: '전라북도 전주시 완산구', image: 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&w=800&q=80', lat: 35.8160, lng: 127.1394 },
-    { name: '전주박물관', address: '전라북도 전주시 완산구', image: 'https://images.unsplash.com/photo-1517760444937-f6397edcbbcd?auto=format&fit=crop&w=800&q=80', lat: 35.8192, lng: 127.1490 }
-  ],
-  gunsan: [
-    { name: '근대문화유산거리', address: '전라북도 군산시 월명동', image: 'https://images.unsplash.com/photo-1499856871958-5b9627545d1a?auto=format&fit=crop&w=800&q=80', lat: 35.9789, lng: 126.7090 },
-    { name: '군산해변', address: '전라북도 군산시 옥도면', image: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=800&q=80', lat: 35.9676, lng: 126.7366 }
-  ],
-  iksan: [
-    { name: '미륵사지', address: '전라북도 익산시 금마면 미륵사지로', image: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80', lat: 35.9481, lng: 126.9575 },
-    { name: '익산문화관광단지', address: '전라북도 익산시 동산동', image: 'https://images.unsplash.com/photo-1468413253725-0d5181091126?auto=format&fit=crop&w=800&q=80', lat: 35.9600, lng: 126.9400 }
-  ],
-  jeongeup: [
-    { name: '정읍사문화공원', address: '전라북도 정읍시 수성동', image: 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=800&q=80', lat: 35.5690, lng: 126.8563 },
-    { name: '내장산', address: '전라북도 정읍시 내장동', image: 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&w=800&q=80', lat: 35.4686, lng: 127.0326 }
-  ],
-  namwon: [
-    { name: '남원 춘향테마파크', address: '전라북도 남원시 춘향로', image: 'https://images.unsplash.com/photo-1473448912268-2022ce9509d8?auto=format&fit=crop&w=800&q=80', lat: 35.4168, lng: 127.3905 },
-    { name: '왕정동 한옥마을', address: '전라북도 남원시 왕정동', image: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=800&q=80', lat: 35.4100, lng: 127.3890 }
-  ],
-  gimje: [
-    { name: '금산사', address: '전라북도 김제시 금산면', image: 'https://images.unsplash.com/photo-1467269204594-9661b134dd2b?auto=format&fit=crop&w=800&q=80', lat: 35.8000, lng: 126.8796 },
-    { name: '김제 벽골제', address: '전라북도 김제시 신풍동', image: 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=800&q=80', lat: 35.8040, lng: 126.8900 }
-  ],
-  wanju: [
-    { name: '소양강', address: '전라북도 완주군 소양면', image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80', lat: 35.9044, lng: 127.1625 },
-    { name: '전주 한옥마을', address: '전라북도 완주군 봉동읍', image: 'https://images.unsplash.com/photo-1468413253725-0d5181091126?auto=format&fit=crop&w=800&q=80', lat: 35.9044, lng: 127.1625 }
-  ],
-  buan: [
-    { name: '겸백리', address: '전라북도 부안군 변산면', image: 'https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=800&q=80', lat: 35.7316, lng: 126.7330 },
-    { name: '부안 내소사', address: '전라북도 부안군 계화면', image: 'https://images.unsplash.com/photo-1499856871958-5b9627545d1a?auto=format&fit=crop&w=800&q=80', lat: 35.7129, lng: 126.7312 }
-  ],
-  yeosu: [
-    { name: '여수해상케이블카', address: '전라남도 여수시 돌산읍', image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80', lat: 34.7420, lng: 127.7420 },
-    { name: '향일암', address: '전라남도 여수시 돌산읍 향일암로', image: 'https://images.unsplash.com/photo-1473448912268-2022ce9509d8?auto=format&fit=crop&w=800&q=80', lat: 34.7397, lng: 127.7395 }
-  ],
-  gwangju: [
-    { name: '5·18 민주묘지', address: '광주광역시 서구 5·18민주묘지길', image: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=800&q=80', lat: 35.1344, lng: 126.9014 },
-    { name: '충장로', address: '광주광역시 서구 치평동', image: 'https://images.unsplash.com/photo-1468413253725-0d5181091126?auto=format&fit=crop&w=800&q=80', lat: 35.1460, lng: 126.9198 }
-  ]
+const provinceOptions = computed(() => provinceGroups.map(({ value, label }) => ({ value, label })))
+const currentRegions = computed(() => provinceGroups.find((group) => group.value === selectedProvince.value)?.regions || [])
+const contentTypeId = computed(() => Number(route.query.contentTypeId || 12))
+const selectedRegionMeta = computed(() => currentRegions.value.find((region) => region.value === selectedRegion.value) || currentRegions.value[0] || null)
+
+function normalizePlace(item) {
+  return {
+    id: item.contentid,
+    name: item.title,
+    address: item.addr1 || '주소 정보 없음',
+    image: item.firstimage || '',
+    lat: Number(item.mapy),
+    lng: Number(item.mapx),
+    tel: item.tel || '',
+    ...item
+  }
 }
 
-const filteredPlaces = computed(() => placeData[selectedRegion.value] || [])
+function inferRegionFromCoordinates(latitude, longitude) {
+  if (latitude >= 35.05 && latitude <= 35.22 && longitude >= 126.74 && longitude <= 126.98) return { province: 'gwangju', region: 'seogu' }
+  if (latitude >= 35.70 && latitude <= 36.05 && longitude >= 126.80 && longitude <= 127.20) return { province: 'jeollabukdo', region: 'jeonju' }
+  if (latitude >= 35.92 && latitude <= 36.02 && longitude >= 126.55 && longitude <= 126.80) return { province: 'jeollabukdo', region: 'gunsan' }
+  if (latitude >= 35.90 && latitude <= 36.00 && longitude >= 126.90 && longitude <= 127.20) return { province: 'jeollabukdo', region: 'iksan' }
+  if (latitude >= 35.50 && latitude <= 35.60 && longitude >= 126.78 && longitude <= 126.90) return { province: 'jeollabukdo', region: 'jeongeup' }
+  if (latitude >= 35.35 && latitude <= 35.45 && longitude >= 127.32 && longitude <= 127.45) return { province: 'jeollabukdo', region: 'namwon' }
+  if (latitude >= 35.75 && latitude <= 35.85 && longitude >= 126.80 && longitude <= 126.92) return { province: 'jeollabukdo', region: 'gimje' }
+  if (latitude >= 35.85 && latitude <= 36.00 && longitude >= 127.10 && longitude <= 127.20) return { province: 'jeollabukdo', region: 'wanju' }
+  if (latitude >= 35.65 && latitude <= 35.78 && longitude >= 126.65 && longitude <= 126.78) return { province: 'jeollabukdo', region: 'buan' }
+  if (latitude >= 34.65 && latitude <= 34.82 && longitude >= 127.62 && longitude <= 127.78) return { province: 'jeollanamdo', region: 'yeosu' }
+  return null
+}
+
+function requestLocations() {
+  const regionMeta = selectedRegionMeta.value
+  if (!regionMeta) return
+
+  isLoading.value = true
+  errorMessage.value = ''
+
+  return apiClient.get('/locations', {
+    params: {
+      contentTypeId: contentTypeId.value,
+      areaCode: regionMeta.areaCode,
+      sigunguCode: regionMeta.sigunguCode
+    }
+  })
+    .then(({ data }) => {
+      const items = Array.isArray(data?.items) ? data.items : []
+      places.value = items.map(normalizePlace)
+      if (!items.length) {
+        errorMessage.value = '표시할 장소가 없습니다.'
+      }
+    })
+    .catch((err) => {
+      console.error(err)
+      errorMessage.value = '데이터를 불러오지 못했습니다.'
+      places.value = []
+    })
+    .finally(() => {
+      isLoading.value = false
+    })
+}
+
+function initLocationBasedRegion() {
+  const providedLatitude = Number(route.query.latitude)
+  const providedLongitude = Number(route.query.longitude)
+
+  if (!Number.isNaN(providedLatitude) && !Number.isNaN(providedLongitude)) {
+    const inferredRegion = inferRegionFromCoordinates(providedLatitude, providedLongitude)
+    if (inferredRegion) {
+      selectedProvince.value = inferredRegion.province
+      selectedRegion.value = inferredRegion.region
+    }
+    requestLocations()
+    return
+  }
+
+  if (!navigator.geolocation) {
+    requestLocations()
+    return
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      const inferredRegion = inferRegionFromCoordinates(position.coords.latitude, position.coords.longitude)
+      if (inferredRegion) {
+        selectedProvince.value = inferredRegion.province
+        selectedRegion.value = inferredRegion.region
+      }
+      requestLocations()
+    },
+    () => {
+      requestLocations()
+    },
+    { enableHighAccuracy: false, timeout: 8000, maximumAge: 600000 }
+  )
+}
+
+onMounted(() => {
+  initLocationBasedRegion()
+})
+
+watch(selectedProvince, (newProvince) => {
+  const province = provinceGroups.find((group) => group.value === newProvince)
+  if (!province) return
+
+  const hasCurrentRegion = province.regions.some((region) => region.value === selectedRegion.value)
+  if (!hasCurrentRegion) {
+    selectedRegion.value = province.regions[0]?.value || ''
+  }
+
+  requestLocations()
+})
+
+watch(selectedRegion, () => {
+  requestLocations()
+})
+
+watch(() => route.query.contentTypeId, () => {
+  requestLocations()
+})
+
+const filteredPlaces = computed(() => places.value)
 </script>
 
 <style scoped>
@@ -146,6 +282,9 @@ const filteredPlaces = computed(() => placeData[selectedRegion.value] || [])
 
 .controls {
   margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
 .select-wrap {
@@ -230,6 +369,22 @@ const filteredPlaces = computed(() => placeData[selectedRegion.value] || [])
 .place-list-scroll::-webkit-scrollbar-thumb {
   background: #cbd5e1;
   border-radius: 999px;
+}
+
+.status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 120px;
+  border-radius: 14px;
+  color: #475569;
+  background: #f8fafc;
+  font-size: 0.95rem;
+}
+
+.status.error {
+  color: #dc2626;
+  background: #fef2f2;
 }
 
 @media (max-width: 900px) {

@@ -31,15 +31,41 @@ const categories = [
   { id: 'shopping', contentTypeId: 38, title: '쇼핑', subtitle: '기념품과 인기 쇼핑 스팟', icon: '🛍️' },
   { id: 'course', contentTypeId: 25, title: '여행코스', subtitle: '추천 코스로 계획 세우기', icon: '🧭' },
   { id: 'food', contentTypeId: 39, title: '음식점', subtitle: '지역 맛집을 한눈에', icon: '🍜' },
+  { id: 'lodging', contentTypeId: 32, title: '숙박', subtitle: '편안한 숙소를 찾아보세요', icon: '🏨' },
   { id: 'festival', contentTypeId: 15, title: '축제공연행사', subtitle: '지금 열리는 행사 확인', icon: '🎉' }
 ]
 
 function goToCategory(category) {
-  router.push({
-    name: 'Category',
-    params: { id: category.id },
-    query: { contentTypeId: category.contentTypeId }
-  })
+  if (!navigator.geolocation) {
+    router.push({
+      name: 'Category',
+      params: { id: category.id },
+      query: { contentTypeId: category.contentTypeId }
+    })
+    return
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      router.push({
+        name: 'Category',
+        params: { id: category.id },
+        query: {
+          contentTypeId: category.contentTypeId,
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude
+        }
+      })
+    },
+    () => {
+      router.push({
+        name: 'Category',
+        params: { id: category.id },
+        query: { contentTypeId: category.contentTypeId }
+      })
+    },
+    { enableHighAccuracy: false, timeout: 8000, maximumAge: 600000 }
+  )
 }
 </script>
 
