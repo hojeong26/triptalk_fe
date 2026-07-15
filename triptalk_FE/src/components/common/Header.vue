@@ -1,7 +1,7 @@
 <template>
   <header class="site-header">
     <div class="container header-inner font-800">
-      <div class="brand">
+      <router-link :to="{ name: 'Home' }" class="brand" aria-label="메인 페이지로 이동">
         <span class="pin" aria-hidden>
           <!-- simple map pin svg, blue fill -->
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
@@ -10,7 +10,7 @@
           </svg>
         </span>
         <span class="logo">TripTalk</span>
-      </div>
+      </router-link>
     </div>
   </header>
 </template>
@@ -25,7 +25,13 @@
   padding: 12px 0;
 }
 .header-inner { display:flex; align-items:center; }
-.brand { display:flex; align-items:center; gap:10px }
+.brand {
+  display:flex;
+  align-items:center;
+  gap:10px;
+  text-decoration: none;
+  cursor: pointer;
+}
 .pin svg { display:block }
 .logo {
   font-size: 20px;
