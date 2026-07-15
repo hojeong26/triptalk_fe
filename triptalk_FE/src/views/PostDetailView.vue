@@ -34,9 +34,9 @@
           <button class="list-button font-400" @click="goBack">목록으로</button>
           <div class="action-buttons">
             <button class="edit-button font-400" @click="openPasswordModal">수정하기</button>
-            <button :class="['like-button', { liked: isLiked }]" @click="toggleLike" aria-label="좋아요">
+            <button :class="['like-button', { liked: isLiked }]" @click="toggleLike" :disabled="isLiking || isLoading" aria-label="좋아요">
               <FontAwesomeIcon :icon="isLiked ? ['fas', 'heart'] : ['far', 'heart']" />
-              <span class="font-400">좋아요</span>
+              <span class="font-400">{{ isLiking ? '반영 중...' : '좋아요' }}</span>
             </button>
           </div>
         </div>
@@ -100,6 +100,7 @@ const showPassword = ref(false)
 const isLoading = ref(false)
 const errorMessage = ref('')
 const isVerifyingPassword = ref(false)
+const isLiking = ref(false)
 
 function normalizePostDetail(data) {
   return {
@@ -182,8 +183,20 @@ const verifyPassword = async () => {
   }
 }
 
-const toggleLike = () => {
-  isLiked.value = !isLiked.value
+const toggleLike = async () => {
+  if (isLiking.value) return
+
+  isLiking.value = true
+  try {
+    const { data } = await apiClient.post(`/posts/${post.value.postId}/likes`)
+    post.value.likeCount = Number(data?.likeCount ?? post.value.likeCount)
+    isLiked.value = true
+  } catch (err) {
+    console.error(err)
+    alert('좋아요 반영에 실패했습니다.')
+  } finally {
+    isLiking.value = false
+  }
 }
 
 const formatDate = (dateStr) => {
@@ -338,6 +351,11 @@ const formatDate = (dateStr) => {
 
 .like-button:hover {
   background: rgba(15, 90, 159, 0.1);
+}
+
+.like-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .like-button.liked {
