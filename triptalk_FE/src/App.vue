@@ -1,14 +1,23 @@
 <script setup>
+import { ref } from 'vue'
 import Header from './components/common/Header.vue'
 import Footer from './components/common/Footer.vue'
 import FloatingChatButton from './components/common/FloatingChatButton.vue'
+import ChatPanel from './features/chat/ChatPanel.vue'
+
+const isChatOpen = ref(false)
+
+function toggleChat() {
+  isChatOpen.value = !isChatOpen.value
+}
 </script>
 
 <template>
   <Header />
   <router-view />
   <Footer />
-  <FloatingChatButton />
+  <FloatingChatButton @toggle="toggleChat" />
+  <ChatPanel v-if="isChatOpen" @close="isChatOpen = false" />
 </template>
 
 <style>
