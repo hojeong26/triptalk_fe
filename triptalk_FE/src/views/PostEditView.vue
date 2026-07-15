@@ -144,7 +144,7 @@ async function handleSubmit() {
 
 .page-header {
   text-align: center;
-  margin: 40px 0 24px;
+  margin: 40px 0 65px;
 }
 
 .page-header h1 {

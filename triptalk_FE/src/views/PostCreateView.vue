@@ -92,17 +92,17 @@ async function handleSubmit() {
 
 <style scoped>
 .post-create-page { width:100%; margin:0 auto; padding:40px 16px; }
-.page-header { text-align:center; margin:60px 0 }
+.page-header { text-align:center; margin:45px 0 70px }
 .page-header h1 { font-size:28px; margin:0; color:#072B57 }
 .page-header .subtitle { margin-top:8px; color:#64748b }
-.form-card { width:100%; max-width:2080px; margin:0 auto; background:white; border-radius:12px; padding:28px; box-shadow:0 12px 30px rgba(15,23,42,0.06); border:1px solid rgba(15,23,42,0.04); display:flex; flex-direction:column; height:60vh }
+.form-card { width:100%; max-width:2080px; margin:0 auto; background:white; border-radius:12px; padding:28px; box-shadow:0 12px 30px rgba(15,23,42,0.06); border:1px solid rgba(15,23,42,0.04); display:flex; flex-direction:column; min-height:60vh; box-sizing:border-box }
 .field { display:block; margin-bottom:18px; position:relative }
 .title-field { margin-bottom:12px }
 .body-field { flex:1; display:flex; flex-direction:column; margin-bottom:12px }
 .body-field textarea { flex:1; min-height:0; overflow:auto }
 .password-field { margin-top:0 }
 .field-label { margin-bottom:8px; color:#475569 }
-.field input, .field textarea { width:100%; padding:12px 14px; border:1px solid #e6eef6; border-radius:8px; font-size:14px; resize:none; }
+.field input, .field textarea { width:100%; padding:12px 14px; border:1px solid #e6eef6; border-radius:8px; font-size:14px; resize:none; box-sizing:border-box }
 .char-count { position:absolute; right:14px; bottom:8px; font-size:12px; color:#94a3b8 }
 .actions { display:flex; justify-content:flex-end; gap:12px; margin-top:12px }
 .btn { padding:10px 18px; border-radius:8px; border:none; cursor:pointer }
@@ -111,7 +111,7 @@ async function handleSubmit() {
 .btn:disabled { opacity: 0.6; cursor: not-allowed }
 
 @media (max-width:768px) {
-  .form-card { padding:20px; height:auto }
-  .page-header { margin:0 0 }
+  .form-card { padding:20px; min-height:auto }
+  .page-header { margin:0 0 50px }
 }
 </style>
