@@ -31,7 +31,7 @@
         <div class="post-footer">
           <button class="list-button font-400" @click="goBack">목록으로</button>
           <div class="action-buttons">
-            <button class="edit-button font-400" @click="editPost">수정하기</button>
+            <button class="edit-button font-400" @click="openPasswordModal">수정하기</button>
             <button :class="['like-button', { liked: isLiked }]" @click="toggleLike" aria-label="좋아요">
               <FontAwesomeIcon :icon="isLiked ? ['fas', 'heart'] : ['far', 'heart']" />
               <span class="font-400">좋아요</span>
@@ -39,6 +39,35 @@
           </div>
         </div>
       </article>
+    </div>
+
+    <!-- 비밀번호 확인 모달 -->
+    <div v-if="showPasswordModal" class="modal-overlay" @click.self="closePasswordModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <FontAwesomeIcon :icon="['fas', 'lock']" class="lock-icon" />
+        </div>
+        <h2 class="modal-title font-800">비밀번호 확인</h2>
+        <p class="modal-description font-300">게시글 작성 시 설정한 비밀번호를 입력해주세요.</p>
+        
+        <div class="password-input-group">
+          <input 
+            :type="showPassword ? 'text' : 'password'"
+            v-model="password"
+            placeholder="비밀번호를 입력해주세요"
+            class="password-input font-400"
+            @keyup.enter="verifyPassword"
+          />
+          <button class="toggle-password" @click="showPassword = !showPassword" aria-label="비밀번호 보기">
+            <FontAwesomeIcon :icon="showPassword ? ['fas', 'eye-slash'] : ['fas', 'eye']" />
+          </button>
+        </div>
+
+        <div class="modal-actions">
+          <button class="cancel-button font-400" @click="closePasswordModal">취소</button>
+          <button class="confirm-button font-400" @click="verifyPassword">확인</button>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -58,11 +87,14 @@ const post = ref({
   fullContent: '',
   date: '',
   views: 0,
-  likes: 0
+  likes: 0,
+  password: '1234' // 실제로는 백엔드에서 해시 비교
 })
 
 const isLiked = ref(false)
-const likeCount = ref(0)
+const showPasswordModal = ref(false)
+const password = ref('')
+const showPassword = ref(false)
 
 // 게시글 데이터 로드
 onMounted(() => {
@@ -77,7 +109,8 @@ onMounted(() => {
       fullContent: '국밥은 따뜻한 국물에 밥을 말아먹는 음식입니다. 이곳의 국밥은 정말 특별한데, 국물이 깊은 맛이 나고 돼지고기도 부드러워요. 강력 추천합니다!',
       date: '2026-05-12',
       views: 102,
-      likes: 24
+      likes: 24,
+      password: '1234'
     },
     {
       id: 2,
@@ -86,7 +119,8 @@ onMounted(() => {
       fullContent: '이 카페는 강남역 근처에 있으며, 모던한 인테리어가 특징입니다. 커피는 싱글 오리진을 사용하며, 바리스타의 실력도 뛰어나요. 조용한 분위기에서 업무나 공부를 하기 좋습니다.',
       date: '2026-05-11',
       views: 85,
-      likes: 17
+      likes: 17,
+      password: '1234'
     },
     {
       id: 3,
@@ -95,14 +129,14 @@ onMounted(() => {
       fullContent: '양식 레스토랑인데 가격대는 합리적이고 음식 퀄리티는 정말 좋습니다. 파스타, 스테이크, 해산물 등 다양한 메뉴가 있으며, 와인 페어링도 가능합니다. 데이트 추천!',
       date: '2026-05-10',
       views: 78,
-      likes: 15
+      likes: 15,
+      password: '1234'
     }
   ]
 
   const found = mockPosts.find(p => p.id === postId)
   if (found) {
     post.value = found
-    likeCount.value = found.likes
   }
 })
 
@@ -110,13 +144,31 @@ const goBack = () => {
   router.push({ name: 'Community' })
 }
 
-const editPost = () => {
-  router.push({ name: 'PostCreate', params: { id: post.value.id } })
+const openPasswordModal = () => {
+  showPasswordModal.value = true
+  password.value = ''
+  showPassword.value = false
+}
+
+const closePasswordModal = () => {
+  showPasswordModal.value = false
+  password.value = ''
+  showPassword.value = false
+}
+
+const verifyPassword = () => {
+  // 실제로는 백엔드에 비밀번호를 보내서 검증합니다
+  if (password.value === post.value.password) {
+    closePasswordModal()
+    router.push({ name: 'PostCreate', params: { id: post.value.id } })
+  } else {
+    alert('비밀번호가 일치하지 않습니다.')
+    password.value = ''
+  }
 }
 
 const toggleLike = () => {
   isLiked.value = !isLiked.value
-  likeCount.value = isLiked.value ? likeCount.value + 1 : likeCount.value - 1
 }
 
 const formatDate = (dateStr) => {
@@ -271,6 +323,134 @@ const formatDate = (dateStr) => {
 .like-button.liked:hover {
   background: #ff5252;
   border-color: #ff5252;
+}
+
+/* 모달 스타일 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 16px;
+  padding: 40px;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  text-align: center;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.lock-icon {
+  font-size: 3rem;
+  color: #0f5a9f;
+  background: rgba(15, 90, 159, 0.1);
+  width: 70px;
+  height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.modal-title {
+  margin: 0 0 12px 0;
+  font-size: 1.5rem;
+  color: #072b57;
+}
+
+.modal-description {
+  color: #64748b;
+  margin-bottom: 28px;
+}
+
+.password-input-group {
+  position: relative;
+  margin-bottom: 28px;
+}
+
+.password-input {
+  width: 100%;
+  padding: 12px 16px 12px 16px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 1rem;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+
+.password-input:focus {
+  outline: none;
+  border-color: #0f5a9f;
+  box-shadow: 0 0 0 3px rgba(15, 90, 159, 0.1);
+}
+
+.toggle-password {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 4px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.toggle-password:hover {
+  color: #0f5a9f;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.cancel-button,
+.confirm-button {
+  flex: 1;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.cancel-button {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.cancel-button:hover {
+  background: #e2e8f0;
+}
+
+.confirm-button {
+  background: #0f5a9f;
+  color: white;
+}
+
+.confirm-button:hover {
+  background: #0d4a85;
 }
 
 @media (max-width: 768px) {
