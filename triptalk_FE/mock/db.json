@@ -1,0 +1,101 @@
+{
+  "locations": [
+    {
+      "contentId": "2783851",
+      "contentTypeId": 12,
+      "areaCode": 5,
+      "sigunguCode": 5,
+      "title": "경암근린공원",
+      "addr1": "전남광주통합특별시 광산구 하남대로54번안길 133 (하남동)",
+      "addr2": "",
+      "mapx": 126.8000977994,
+      "mapy": 35.1783221177,
+      "mlevel": 6,
+      "firstimage": "",
+      "firstimage2": "",
+      "tel": ""
+    },
+    {
+      "contentId": "2783852",
+      "contentTypeId": 12,
+      "areaCode": 5,
+      "sigunguCode": 5,
+      "title": "광주송정역",
+      "addr1": "광주광역시 광산구 하남대로 123",
+      "addr2": "",
+      "mapx": 126.7934,
+      "mapy": 35.1807,
+      "mlevel": 6,
+      "firstimage": "",
+      "firstimage2": "",
+      "tel": ""
+    },
+    {
+      "contentId": "2783853",
+      "contentTypeId": 12,
+      "areaCode": 5,
+      "sigunguCode": 5,
+      "title": "무등산국립공원",
+      "addr1": "광주광역시 북구 무등산로 123",
+      "addr2": "",
+      "mapx": 126.9888,
+      "mapy": 35.1297,
+      "mlevel": 6,
+      "firstimage": "",
+      "firstimage2": "",
+      "tel": ""
+    },
+    {
+      "contentId": "2783854",
+      "contentTypeId": 12,
+      "areaCode": 37,
+      "sigunguCode": 1,
+      "title": "전주한옥마을",
+      "addr1": "전라북도 전주시 완산구 은행로 1",
+      "addr2": "",
+      "mapx": 127.1478,
+      "mapy": 35.8242,
+      "mlevel": 6,
+      "firstimage": "",
+      "firstimage2": "",
+      "tel": ""
+    },
+    {
+      "contentId": "2783855",
+      "contentTypeId": 12,
+      "areaCode": 37,
+      "sigunguCode": 1,
+      "title": "전주한벽문화관",
+      "addr1": "전라북도 전주시 완산구 성당길 11",
+      "addr2": "",
+      "mapx": 127.1497,
+      "mapy": 35.8202,
+      "mlevel": 6,
+      "firstimage": "",
+      "firstimage2": "",
+      "tel": ""
+    }
+  ],
+  "posts": [
+    {
+      "postId": 1,
+      "contentTypeId": 39,
+      "title": "현지인이 추천하는 국밥집",
+      "content": "광주에서 꼭 가봐야 할 국밥집입니다.",
+      "likeCount": 24,
+      "createAt": "2026-07-16T12:00:00Z",
+      "viewCount": 102
+    },
+    {
+      "postId": 2,
+      "contentTypeId": 12,
+      "title": "숨은 명소 추천",
+      "content": "여름에 가기 좋은 조용한 관광지입니다.",
+      "likeCount": 17,
+      "createAt": "2026-07-15T09:00:00Z",
+      "viewCount": 88
+    }
+  ],
+  "nextCursor": 100,
+  "message": "success"
+}
