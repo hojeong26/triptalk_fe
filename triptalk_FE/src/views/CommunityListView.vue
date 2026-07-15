@@ -29,6 +29,7 @@
       <PostCard
         v-for="post in posts"
         :key="post.id"
+        :id="post.id"
         :title="post.title"
         :excerpt="post.excerpt"
         :likes="post.likes"
