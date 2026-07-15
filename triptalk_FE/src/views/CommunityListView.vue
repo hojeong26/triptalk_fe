@@ -3,7 +3,7 @@
     <header class="community-header">
       <div class="community-header-left">
         <div class="community-title-wrap">
-          <strong class="font-800">맛집 게시판</strong>
+          <strong class="font-800">{{ boardTitle }}</strong>
           <span class="font-400">여행자들의 생생한 추천 글을 만나보세요</span>
         </div>
       </div>
@@ -21,11 +21,13 @@
     </div>
 
     <div class="filter-chips">
-      <button class="chip active font-400">최신순</button>
-      <button class="chip font-400">추천순</button>
+      <button class="chip font-400" :class="{ active: sortKeyword === '최신순' }" @click="selectSort('최신순')">최신순</button>
+      <button class="chip font-400" :class="{ active: sortKeyword === '추천순' }" @click="selectSort('추천순')">추천순</button>
     </div>
 
-    <div class="post-list">
+    <div v-if="isLoading" class="status">게시글을 불러오는 중입니다...</div>
+    <div v-else-if="errorMessage" class="status error">{{ errorMessage }}</div>
+    <div v-else class="post-list">
       <PostCard
         v-for="post in posts"
         :key="post.id"
@@ -41,73 +43,85 @@
 </template>
 
 <script setup>
-import { useRouter } from 'vue-router'
+import { computed, onMounted, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import PostCard from '../features/community/components/PostCard.vue'
+import { apiClient } from '../services/apiClient'
 
 const router = useRouter()
+const route = useRoute()
+const posts = ref([])
+const sortKeyword = ref('최신순')
+const isLoading = ref(false)
+const errorMessage = ref('')
+const nextCursor = ref(100)
+const pageSize = 10
+
+const categoryTitleMap = {
+  12: '관광지',
+  14: '문화시설',
+  15: '축제공연행사',
+  25: '여행코스',
+  28: '레포츠',
+  32: '숙박',
+  38: '쇼핑',
+  39: '음식점'
+}
+
+const contentTypeId = computed(() => Number(route.query.contentTypeId || 39))
+const boardTitle = computed(() => {
+  const label = categoryTitleMap[contentTypeId.value] || '여행'
+  return `${label} 게시판`
+})
 
 function goToMap() {
   router.push({ name: 'Category', params: { id: 'jeonju' } })
 }
 
-const posts = [
-  {
-    id: 1,
-    title: '현지인이 추천하는 진짜 국밥집',
-    excerpt: '여기 국밥 진짜 맛있어요! 현지인들도 줄 서서 먹는 맛집입니다.',
-    likes: 24,
-    views: 102,
-    date: '2026-09-04'
-  },
-  {
-    id: 2,
-    title: '분위기 좋은 강남 카페 추천',
-    excerpt: '인테리어도 예쁘고 커피도 맛있는 카페를 찾아보았어요.',
-    likes: 17,
-    views: 85,
-    date: '2026-09-03'
-  },
-  {
-    id: 3,
-    title: '가성비 좋은 양식 레스토랑',
-    excerpt: '가성비 대비 음식 퀄리티가 정말 좋아요. 데이트 장소로 추천합니다!',
-    likes: 15,
-    views: 78,
-    date: '2026-09-02'
-  },
-  {
-    id: 4,
-    title: '강남역 근처 숨은 맛집 리스트',
-    excerpt: '직장인들이 점심에 많이 가는 숨은 맛집 모음입니다.',
-    likes: 11,
-    views: 67,
-    date: '2026-09-01'
-  },
-  {
-    id: 4,
-    title: '강남역 근처 숨은 맛집 리스트',
-    excerpt: '직장인들이 점심에 많이 가는 숨은 맛집 모음입니다.',
-    likes: 11,
-    views: 67,
-    date: '2026-09-01'
-  },
-  {
-    id: 4,
-    title: '강남역 근처 숨은 맛집 리스트',
-    excerpt: '직장인들이 점심에 많이 가는 숨은 맛집 모음입니다.',
-    likes: 11,
-    views: 67,
-    date: '2026-09-01'
-  },
-  {
-    id: 4,
-    title: '강남역 근처 숨은 맛집 리스트',
-    excerpt: '직장인들이 점심에 많이 가는 숨은 맛집 모음입니다.',
-    likes: 11,
-    views: 67,
-    date: '2026-09-01'
+function selectSort(keyword) {
+  sortKeyword.value = keyword
+  fetchPosts()
+}
+
+function normalizePost(post) {
+  return {
+    id: post.postId ?? post.id,
+    title: post.title || '제목 없음',
+    excerpt: post.content || '',
+    likes: Number(post.likeCount || 0),
+    views: Number(post.viewCount || 0),
+    date: post.createAt || '',
+    contentTypeId: post.contentTypeId
   }
-]
+}
+
+async function fetchPosts() {
+  isLoading.value = true
+  errorMessage.value = ''
+
+  try {
+    const { data } = await apiClient.get('/posts', {
+      params: {
+        keyword: sortKeyword.value,
+        sort: 'latest',
+        cursor: nextCursor.value,
+        size: pageSize
+      }
+    })
+
+    posts.value = Array.isArray(data?.posts) ? data.posts.map(normalizePost) : []
+  } catch (err) {
+    console.error(err)
+    errorMessage.value = '게시글을 불러오지 못했습니다.'
+    posts.value = []
+  } finally {
+    isLoading.value = false
+  }
+}
+
+onMounted(() => {
+  fetchPosts()
+})
 </script>
 
 <style scoped>
@@ -181,6 +195,17 @@ const posts = [
 .chip.active { background: #eff6ff; border-color: #bfdbfe; color: #2563EB; }
 .post-list { display: grid; gap: 18px; }
 .post-list { display: grid; gap: 18px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.status {
+  padding: 20px;
+  border-radius: 14px;
+  background: #f8fafc;
+  color: #475569;
+  text-align: center;
+}
+.status.error {
+  color: #dc2626;
+  background: #fef2f2;
+}
 
 @media (max-width: 1024px) {
   .post-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }

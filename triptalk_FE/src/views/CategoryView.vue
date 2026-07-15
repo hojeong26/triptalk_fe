@@ -23,7 +23,7 @@
         </label>
       </div>
 
-      <router-link :to="{ name: 'Community' }" class="community-link font-400">게시판 보러 가기</router-link>
+      <router-link :to="{ name: 'Community', query: { contentTypeId: contentTypeId } }" class="community-link font-400">게시판 보러 가기</router-link>
     </div>
 
     <div class="content-grid">
