@@ -1,0 +1,141 @@
+{
+  "posts": [
+    {
+      "postId": 1,
+      "contentTypeId": 12,
+      "title": "전주 한옥마을 야경 코스",
+      "content": "야간 산책하기 좋은 동선을 정리했어요.",
+      "likeCount": 31,
+      "createAt": "2026-07-15T05:50:08.421754",
+      "viewCount": 214
+    },
+    {
+      "postId": 2,
+      "contentTypeId": 12,
+      "title": "전주 비 오는 날 실내 명소",
+      "content": "비 오는 날에도 가기 좋은 장소 모음입니다.",
+      "likeCount": 18,
+      "createAt": "2026-07-14T10:12:44.003210",
+      "viewCount": 132
+    },
+    {
+      "postId": 3,
+      "contentTypeId": 39,
+      "title": "광주 국밥집 추천",
+      "content": "현지인 기준으로 맛있던 집들입니다.",
+      "likeCount": 42,
+      "createAt": "2026-07-13T08:20:11.112345",
+      "viewCount": 301
+    },
+    {
+      "postId": 4,
+      "contentTypeId": 32,
+      "title": "가성비 좋은 숙소 정리",
+      "content": "교통 편한 숙소 위주로 정리했어요.",
+      "likeCount": 26,
+      "createAt": "2026-07-12T19:03:55.786542",
+      "viewCount": 167
+    },
+    {
+      "postId": 5,
+      "contentTypeId": 14,
+      "title": "박물관 하루 코스",
+      "content": "전시 일정과 동선을 함께 공유합니다.",
+      "likeCount": 14,
+      "createAt": "2026-07-11T07:01:09.010001",
+      "viewCount": 95
+    },
+    {
+      "postId": 6,
+      "contentTypeId": 12,
+      "title": "전주 남부시장 야시장 후기",
+      "content": "저녁에 걷기 좋고 먹거리도 많았습니다.",
+      "likeCount": 27,
+      "createAt": "2026-07-10T20:45:12.120011",
+      "viewCount": 188
+    },
+    {
+      "postId": 7,
+      "contentTypeId": 39,
+      "title": "광주 떡갈비 맛집 모음",
+      "content": "관광객이 가기 편한 위치 위주로 정리했어요.",
+      "likeCount": 36,
+      "createAt": "2026-07-09T11:24:02.334455",
+      "viewCount": 276
+    },
+    {
+      "postId": 8,
+      "contentTypeId": 39,
+      "title": "전주 콩나물국밥 비교",
+      "content": "아침 식사하기 좋은 집 세 곳 비교입니다.",
+      "likeCount": 29,
+      "createAt": "2026-07-08T08:10:59.987654",
+      "viewCount": 241
+    },
+    {
+      "postId": 9,
+      "contentTypeId": 32,
+      "title": "전주역 근처 숙소 추천",
+      "content": "대중교통 이용할 때 편한 숙소를 모았어요.",
+      "likeCount": 21,
+      "createAt": "2026-07-07T17:32:41.001122",
+      "viewCount": 163
+    },
+    {
+      "postId": 10,
+      "contentTypeId": 14,
+      "title": "광주 미술관 관람 동선",
+      "content": "주말 기준으로 효율적인 관람 코스입니다.",
+      "likeCount": 19,
+      "createAt": "2026-07-06T14:09:20.667788",
+      "viewCount": 129
+    },
+    {
+      "postId": 11,
+      "contentTypeId": 38,
+      "title": "전주 기념품 쇼핑 리스트",
+      "content": "가볍게 사기 좋은 특산품 중심으로 정리했어요.",
+      "likeCount": 23,
+      "createAt": "2026-07-05T13:02:10.554433",
+      "viewCount": 147
+    },
+    {
+      "postId": 12,
+      "contentTypeId": 25,
+      "title": "광주 반나절 코스 공유",
+      "content": "처음 방문하는 사람 기준으로 짧은 코스입니다.",
+      "likeCount": 16,
+      "createAt": "2026-07-04T09:30:45.112233",
+      "viewCount": 118
+    },
+    {
+      "postId": 13,
+      "contentTypeId": 28,
+      "title": "레포츠 입문 코스",
+      "content": "초보자도 가능한 액티비티 위주로 모아봤어요.",
+      "likeCount": 22,
+      "createAt": "2026-07-03T16:18:27.223344",
+      "viewCount": 154
+    },
+    {
+      "postId": 14,
+      "contentTypeId": 15,
+      "title": "주말 축제 일정 정리",
+      "content": "이번 주말 열리는 지역 축제 일정입니다.",
+      "likeCount": 34,
+      "createAt": "2026-07-02T10:56:39.778899",
+      "viewCount": 209
+    },
+    {
+      "postId": 15,
+      "contentTypeId": 12,
+      "title": "전주 덕진공원 산책 팁",
+      "content": "아침 시간대 방문 팁과 포토스팟 공유합니다.",
+      "likeCount": 25,
+      "createAt": "2026-07-01T06:40:01.445566",
+      "viewCount": 171
+    }
+  ],
+  "nextCursor": 100,
+  "message": "success"
+}

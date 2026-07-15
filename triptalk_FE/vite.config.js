@@ -29,23 +29,29 @@ export default defineConfig({
         }
 
         if (req.url?.startsWith('/posts')) {
-          const db = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'mock/db.json'), 'utf8'))
+          const mockPosts = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'mock/posts.json'), 'utf8'))
           const url = new URL(req.url, 'http://localhost')
           const keyword = url.searchParams.get('keyword') || '최신순'
-          const sort = url.searchParams.get('sort') || 'latest'
-          const posts = [...db.posts]
+          const contentTypeId = Number(url.searchParams.get('contentTypeId'))
+          const size = Number(url.searchParams.get('size') || 10)
+          const posts = [...mockPosts.posts]
+
+          const filteredPosts = posts.filter((post) => {
+            if (Number.isNaN(contentTypeId)) return true
+            return Number(post.contentTypeId) === contentTypeId
+          })
 
           if (keyword === '추천순') {
-            posts.sort((a, b) => (b.likeCount || 0) - (a.likeCount || 0))
+            filteredPosts.sort((a, b) => (b.likeCount || 0) - (a.likeCount || 0))
           } else {
-            posts.sort((a, b) => new Date(b.createAt || 0) - new Date(a.createAt || 0))
+            filteredPosts.sort((a, b) => new Date(b.createAt || 0) - new Date(a.createAt || 0))
           }
 
           res.setHeader('Content-Type', 'application/json')
           res.end(JSON.stringify({
-            posts: posts.slice(0, 10),
-            nextCursor: db.nextCursor,
-            message: db.message
+            posts: filteredPosts.slice(0, size),
+            nextCursor: mockPosts.nextCursor,
+            message: mockPosts.message
           }))
           return
         }

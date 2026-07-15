@@ -83,6 +83,15 @@ function selectSort(keyword) {
   fetchPosts()
 }
 
+function toDateOnly(value) {
+  if (!value) return ''
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) {
+    return String(value).split('T')[0] || ''
+  }
+  return date.toISOString().slice(0, 10)
+}
+
 function normalizePost(post) {
   return {
     id: post.postId ?? post.id,
@@ -90,7 +99,7 @@ function normalizePost(post) {
     excerpt: post.content || '',
     likes: Number(post.likeCount || 0),
     views: Number(post.viewCount || 0),
-    date: post.createAt || '',
+    date: toDateOnly(post.createAt || post.date || ''),
     contentTypeId: post.contentTypeId
   }
 }
@@ -102,6 +111,7 @@ async function fetchPosts() {
   try {
     const { data } = await apiClient.get('/posts', {
       params: {
+        contentTypeId: contentTypeId.value,
         keyword: sortKeyword.value,
         sort: 'latest',
         cursor: nextCursor.value,
