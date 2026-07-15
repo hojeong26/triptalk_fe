@@ -131,13 +131,17 @@ const contentTypeId = computed(() => Number(route.query.contentTypeId || 12))
 const selectedRegionMeta = computed(() => currentRegions.value.find((region) => region.value === selectedRegion.value) || currentRegions.value[0] || null)
 
 function normalizePlace(item) {
+  const locationId = item.contentId ?? item.contentid ?? item.id ?? ''
+  const latitude = Number(item.mapy ?? item.lat ?? 0)
+  const longitude = Number(item.mapx ?? item.lng ?? 0)
+
   return {
-    id: item.contentid,
-    name: item.title,
-    address: item.addr1 || '주소 정보 없음',
-    image: item.firstimage || '',
-    lat: Number(item.mapy),
-    lng: Number(item.mapx),
+    id: locationId,
+    name: item.title || item.name || '제목 없음',
+    address: item.addr1 || item.addr2 || '주소 정보 없음',
+    image: item.firstimage || item.firstimage2 || '',
+    lat: latitude,
+    lng: longitude,
     tel: item.tel || '',
     ...item
   }
@@ -172,7 +176,7 @@ function requestLocations() {
     }
   })
     .then(({ data }) => {
-      const items = Array.isArray(data?.items) ? data.items : []
+      const items = Array.isArray(data?.locations) ? data.locations : []
       places.value = items.map(normalizePlace)
       if (!items.length) {
         errorMessage.value = '표시할 장소가 없습니다.'
