@@ -84,7 +84,8 @@ watch(() => props.selectedRegion, () => {
 .leaflet-map {
   width: 100%;
   height: 100%;
-  min-height: 420px;
+  min-height: 0;
+  flex: 1;
   border-radius: 16px;
   overflow: hidden;
   box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
