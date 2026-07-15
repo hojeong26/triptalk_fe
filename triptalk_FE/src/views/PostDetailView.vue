@@ -66,8 +66,8 @@
         </div>
 
         <div class="modal-actions">
-          <button class="cancel-button font-400" @click="closePasswordModal">취소</button>
-          <button class="confirm-button font-400" @click="verifyPassword">확인</button>
+          <button class="cancel-button font-400" @click="closePasswordModal" :disabled="isVerifyingPassword">취소</button>
+          <button class="confirm-button font-400" @click="verifyPassword" :disabled="isVerifyingPassword">{{ isVerifyingPassword ? '확인 중...' : '확인' }}</button>
         </div>
       </div>
     </div>
@@ -99,7 +99,7 @@ const password = ref('')
 const showPassword = ref(false)
 const isLoading = ref(false)
 const errorMessage = ref('')
-const localEditPassword = '1234'
+const isVerifyingPassword = ref(false)
 
 function normalizePostDetail(data) {
   return {
@@ -153,13 +153,32 @@ const closePasswordModal = () => {
   showPassword.value = false
 }
 
-const verifyPassword = () => {
-  if (password.value === localEditPassword) {
-    closePasswordModal()
-    router.push({ name: 'PostEdit', params: { id: post.value.postId } })
-  } else {
-    alert('비밀번호가 일치하지 않습니다.')
+const verifyPassword = async () => {
+  const trimmedPassword = password.value.trim()
+  if (!trimmedPassword) {
+    alert('비밀번호를 입력해 주세요.')
+    return
+  }
+
+  isVerifyingPassword.value = true
+  try {
+    const { data } = await apiClient.post(`/posts/${post.value.postId}/verify-password`, {
+      password: trimmedPassword
+    })
+
+    if (data?.verified) {
+      closePasswordModal()
+      router.push({ name: 'PostEdit', params: { id: post.value.postId } })
+      return
+    }
+
+    alert(data?.message || '비밀번호가 일치하지 않습니다.')
     password.value = ''
+  } catch (err) {
+    console.error(err)
+    alert('비밀번호 검증에 실패했습니다.')
+  } finally {
+    isVerifyingPassword.value = false
   }
 }
 
@@ -458,6 +477,12 @@ const formatDate = (dateStr) => {
 
 .confirm-button:hover {
   background: #0d4a85;
+}
+
+.cancel-button:disabled,
+.confirm-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 @media (max-width: 768px) {

@@ -9,6 +9,45 @@ export default defineConfig({
     name: 'mock-api',
     configureServer(server) {
       server.middlewares.use((req, res, next) => {
+        const verifyPasswordMatch = req.url?.match(/^\/posts\/(\d+)\/verify-password(\?.*)?$/)
+        if (req.method === 'POST' && verifyPasswordMatch) {
+          let body = ''
+          req.on('data', (chunk) => {
+            body += chunk
+          })
+
+          req.on('end', () => {
+            try {
+              const payload = JSON.parse(body || '{}')
+              const inputPassword = String(payload.password || '').trim()
+              const postId = Number(verifyPasswordMatch[1])
+              const mockPosts = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'mock/posts.json'), 'utf8'))
+              const foundPost = mockPosts.posts.find((post) => Number(post.postId) === postId)
+
+              if (!foundPost) {
+                res.statusCode = 404
+                res.setHeader('Content-Type', 'application/json')
+                res.end(JSON.stringify({ verified: false, message: '게시글을 찾을 수 없습니다.' }))
+                return
+              }
+
+              const savedPassword = String(foundPost.password || '1234')
+              const verified = inputPassword === savedPassword
+
+              res.setHeader('Content-Type', 'application/json')
+              res.end(JSON.stringify({
+                verified,
+                message: verified ? '비밀번호 검증 성공' : '비밀번호가 일치하지 않습니다.'
+              }))
+            } catch (error) {
+              res.statusCode = 400
+              res.setHeader('Content-Type', 'application/json')
+              res.end(JSON.stringify({ verified: false, message: '요청 본문 파싱에 실패했습니다.' }))
+            }
+          })
+          return
+        }
+
         if (req.method === 'POST' && req.url === '/posts') {
           let body = ''
           req.on('data', (chunk) => {
@@ -37,6 +76,7 @@ export default defineConfig({
                 contentTypeId,
                 title,
                 content,
+                password,
                 likeCount: 0,
                 createAt: new Date().toISOString(),
                 viewCount: 0
