@@ -1,0 +1,17 @@
+/* Global CSS variables */
+:root {
+  --primary: #3b82f6;
+  --primary-600: #2563eb;
+  --bg: #ffffff;
+  --surface: #f8fafc;
+  --text: #0f172a;
+  --muted: #64748b;
+  --radius: 8px;
+}
+
+/* Basic utilities */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
