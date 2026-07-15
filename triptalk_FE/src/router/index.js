@@ -6,6 +6,7 @@ const MapView = () => import('../views/MapView.vue')
 const CommunityListView = () => import('../views/CommunityListView.vue')
 const PostDetailView = () => import('../views/PostDetailView.vue')
 const PostCreateView = () => import('../views/PostCreateView.vue')
+const PostEditView = () => import('../views/PostEditView.vue')
 
 const routes = [
 	{ path: '/', name: 'Home', component: HomeView },
@@ -14,6 +15,7 @@ const routes = [
 	{ path: '/community', name: 'Community', component: CommunityListView },
 	{ path: '/community/:board', name: 'CommunityBoard', component: CommunityListView },
 	{ path: '/post/new', name: 'PostCreate', component: PostCreateView },
+	{ path: '/post/:id/edit', name: 'PostEdit', component: PostEditView },
 	{ path: '/post/:id', name: 'PostDetail', component: PostDetailView }
 ]
 

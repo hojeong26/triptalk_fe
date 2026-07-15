@@ -160,7 +160,7 @@ const verifyPassword = () => {
   // 실제로는 백엔드에 비밀번호를 보내서 검증합니다
   if (password.value === post.value.password) {
     closePasswordModal()
-    router.push({ name: 'PostCreate', params: { id: post.value.id } })
+    router.push({ name: 'PostEdit', params: { id: post.value.id } })
   } else {
     alert('비밀번호가 일치하지 않습니다.')
     password.value = ''
