@@ -6,6 +6,9 @@
     </header>
 
     <form class="form-card font-500" @submit.prevent="handleSubmit">
+      <div v-if="isLoading" class="status">게시글 정보를 불러오는 중입니다...</div>
+      <div v-else-if="errorMessage" class="status error">{{ errorMessage }}</div>
+
       <label class="field title-field">
         <div class="field-label">제목</div>
         <input v-model="title" maxlength="100" placeholder="제목을 입력해주세요." class="font-300" />
@@ -18,16 +21,11 @@
         <div class="char-count">{{ body.length }} / 3000</div>
       </label>
 
-      <label class="field password-field">
-        <div class="field-label">비밀번호</div>
-        <input class="font-300" v-model="password" type="password" placeholder="수정 권한 확인용 비밀번호를 입력해주세요." />
-      </label>
-
       <div class="actions">
-        <button type="button" class="btn danger font-400" @click="handleDelete">삭제하기</button>
+        <button type="button" class="btn danger font-400" @click="handleDelete" :disabled="isSubmitting || isLoading">삭제하기</button>
         <div class="right-actions">
-          <button type="button" class="btn cancel font-400" @click="onCancel">취소</button>
-          <button type="submit" class="btn primary font-400">수정하기</button>
+          <button type="button" class="btn cancel font-400" @click="onCancel" :disabled="isSubmitting">취소</button>
+          <button type="submit" class="btn primary font-400" :disabled="isSubmitting || isLoading">{{ isSubmitting ? '수정 중...' : '수정하기' }}</button>
         </div>
       </div>
     </form>
@@ -37,43 +35,52 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { apiClient } from '../services/apiClient'
 
 const route = useRoute()
 const router = useRouter()
 
 const title = ref('')
 const body = ref('')
-const password = ref('')
+const contentTypeId = ref(undefined)
+const isLoading = ref(false)
+const isSubmitting = ref(false)
+const errorMessage = ref('')
+
+function normalizePostDetail(data) {
+  return {
+    postId: Number(data?.postId || 0),
+    contentTypeId: Number(data?.contentTypeId || 0),
+    title: data?.title || '',
+    content: data?.content || ''
+  }
+}
+
+async function fetchPostDetail() {
+  const postId = Number(route.params.id)
+  if (Number.isNaN(postId)) {
+    errorMessage.value = '잘못된 게시글 ID입니다.'
+    return
+  }
+
+  isLoading.value = true
+  errorMessage.value = ''
+  try {
+    const { data } = await apiClient.get(`/posts/${postId}`)
+    const normalized = normalizePostDetail(data)
+    title.value = normalized.title
+    body.value = normalized.content
+    contentTypeId.value = normalized.contentTypeId || undefined
+  } catch (err) {
+    console.error(err)
+    errorMessage.value = '게시글 정보를 불러오지 못했습니다.'
+  } finally {
+    isLoading.value = false
+  }
+}
 
 onMounted(() => {
-  const postId = Number(route.params.id)
-  const mockPosts = [
-    {
-      id: 1,
-      title: '현지인이 추천하는 진짜 국밥집',
-      fullContent: '국밥은 따뜻한 국물에 밥을 말아먹는 음식입니다. 이곳의 국밥은 정말 특별한데, 국물이 깊은 맛이 나고 돼지고기도 부드러워요. 강력 추천합니다!',
-      password: '1234'
-    },
-    {
-      id: 2,
-      title: '분위기 좋은 강남 카페 추천',
-      fullContent: '이 카페는 강남역 근처에 있으며, 모던한 인테리어가 특징입니다. 커피는 싱글 오리진을 사용하며, 바리스타의 실력도 뛰어나요. 조용한 분위기에서 업무나 공부를 하기 좋습니다.',
-      password: '1234'
-    },
-    {
-      id: 3,
-      title: '가성비 좋은 양식 레스토랑',
-      fullContent: '양식 레스토랑인데 가격대는 합리적이고 음식 퀄리티는 정말 좋습니다. 파스타, 스테이크, 해산물 등 다양한 메뉴가 있으며, 와인 페어링도 가능합니다. 데이트 추천!',
-      password: '1234'
-    }
-  ]
-
-  const found = mockPosts.find((post) => post.id === postId)
-  if (found) {
-    title.value = found.title
-    body.value = found.fullContent
-    password.value = found.password ?? ''
-  }
+  fetchPostDetail()
 })
 
 function onCancel() {
@@ -81,13 +88,14 @@ function onCancel() {
 }
 
 function handleDelete() {
-  if (confirm('정말 삭제하시겠습니까?')) {
-    console.log('delete post', route.params.id)
-    router.push({ name: 'Community' })
-  }
+  const shouldDelete = confirm('정말 삭제하시겠습니까?')
+  if (!shouldDelete) return
+
+  // TODO: 삭제 API가 확정되면 실제 DELETE 요청으로 교체
+  router.push({ name: 'Community', query: { contentTypeId: contentTypeId.value } })
 }
 
-function handleSubmit() {
+async function handleSubmit() {
   if (!title.value.trim()) {
     alert('제목을 입력해 주세요.')
     return
@@ -96,19 +104,23 @@ function handleSubmit() {
     alert('본문을 입력해 주세요.')
     return
   }
-  if (!password.value.trim()) {
-    alert('비밀번호를 입력해 주세요.')
-    return
+
+  isSubmitting.value = true
+  try {
+    const postId = Number(route.params.id)
+    const { data } = await apiClient.put(`/posts/${postId}`, {
+      title: title.value.trim(),
+      content: body.value.trim()
+    })
+
+    alert(data?.message || '게시글 수정 성공')
+    router.push({ name: 'PostDetail', params: { id: route.params.id }, query: { contentTypeId: contentTypeId.value } })
+  } catch (err) {
+    console.error(err)
+    alert('게시글 수정에 실패했습니다.')
+  } finally {
+    isSubmitting.value = false
   }
-
-  console.log({
-    id: route.params.id,
-    title: title.value,
-    body: body.value,
-    password: password.value
-  })
-
-  router.push({ name: 'PostDetail', params: { id: route.params.id } })
 }
 </script>
 
@@ -220,6 +232,23 @@ function handleSubmit() {
   color: white;
 }
 
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.status {
+  padding: 12px;
+  border-radius: 10px;
+  background: #f8fafc;
+  color: #475569;
+}
+
+.status.error {
+  color: #dc2626;
+  background: #fef2f2;
+}
+
 @media (max-width: 768px) {
   .post-edit-page {
     padding: 24px 12px;
@@ -235,7 +264,8 @@ function handleSubmit() {
   }
 
   .right-actions {
-    justify-content: flex-end;
+    display: flex;
+    gap: 12px;
   }
 }
 </style>

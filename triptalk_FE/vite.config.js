@@ -48,6 +48,57 @@ export default defineConfig({
           return
         }
 
+        const postUpdateMatch = req.url?.match(/^\/posts\/(\d+)(\?.*)?$/)
+        if (req.method === 'PUT' && postUpdateMatch) {
+          let body = ''
+          req.on('data', (chunk) => {
+            body += chunk
+          })
+
+          req.on('end', () => {
+            try {
+              const payload = JSON.parse(body || '{}')
+              const title = String(payload.title || '').trim()
+              const content = String(payload.content || '').trim()
+              const postId = Number(postUpdateMatch[1])
+
+              if (!title || !content) {
+                res.statusCode = 400
+                res.setHeader('Content-Type', 'application/json')
+                res.end(JSON.stringify({ message: '요청 값이 올바르지 않습니다.' }))
+                return
+              }
+
+              const mockPostsPath = path.resolve(__dirname, 'mock/posts.json')
+              const mockPosts = JSON.parse(fs.readFileSync(mockPostsPath, 'utf8'))
+              const targetIndex = mockPosts.posts.findIndex((post) => Number(post.postId) === postId)
+
+              if (targetIndex < 0) {
+                res.statusCode = 404
+                res.setHeader('Content-Type', 'application/json')
+                res.end(JSON.stringify({ message: '게시글을 찾을 수 없습니다.' }))
+                return
+              }
+
+              mockPosts.posts[targetIndex] = {
+                ...mockPosts.posts[targetIndex],
+                title,
+                content
+              }
+
+              fs.writeFileSync(mockPostsPath, JSON.stringify(mockPosts, null, 2), 'utf8')
+
+              res.setHeader('Content-Type', 'application/json')
+              res.end(JSON.stringify({ message: '게시글 수정 성공' }))
+            } catch (error) {
+              res.statusCode = 400
+              res.setHeader('Content-Type', 'application/json')
+              res.end(JSON.stringify({ message: '요청 본문 파싱에 실패했습니다.' }))
+            }
+          })
+          return
+        }
+
         if (req.method === 'POST' && req.url === '/posts') {
           let body = ''
           req.on('data', (chunk) => {
