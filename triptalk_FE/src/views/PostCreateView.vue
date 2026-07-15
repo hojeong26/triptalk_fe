@@ -1,11 +1,88 @@
 <template>
-  <div>
-    <h2>글쓰기</h2>
-    <PostForm @submit="onSubmit" />
-  </div>
+  <section class="post-create-page">
+    <header class="page-header">
+      <h1>글쓰기</h1>
+      <p class="subtitle">여러분의 경험을 공유해 주세요.</p>
+    </header>
+
+    <form class="form-card" @submit.prevent="handleSubmit">
+      <label class="field title-field">
+        <div class="field-label">제목</div>
+        <input v-model="title" maxlength="100" placeholder="제목을 입력해주세요." />
+        <div class="char-count">{{ title.length }} / 100</div>
+      </label>
+
+      <label class="field body-field">
+        <div class="field-label">본문</div>
+        <textarea v-model="body" rows="8" maxlength="3000" placeholder="내용을 입력해주세요. (사진은 등록할 수 없습니다.)"></textarea>
+        <div class="char-count">{{ body.length }} / 3000</div>
+      </label>
+
+      <label class="field password-field">
+        <div class="field-label">비밀번호</div>
+        <input v-model="password" type="password" placeholder="게시글 수정/삭제 시 필요한 비밀번호를 입력해주세요." />
+      </label>
+
+      <div class="actions">
+        <button type="button" class="btn cancel" @click="onCancel">취소</button>
+        <button type="submit" class="btn primary">작성하기</button>
+      </div>
+    </form>
+  </section>
 </template>
 
 <script setup>
-import PostForm from '../features/community/PostForm.vue'
-const onSubmit = () => { alert('submit') }
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+const title = ref('')
+const body = ref('')
+const password = ref('')
+
+function onCancel() {
+  router.push('/community')
+}
+
+function handleSubmit() {
+  // basic validation
+  if (!title.value.trim()) {
+    alert('제목을 입력해 주세요.')
+    return
+  }
+  if (!body.value.trim()) {
+    alert('본문을 입력해 주세요.')
+    return
+  }
+
+  // here you would send the data to API
+  console.log({ title: title.value, body: body.value, password: password.value })
+  // after submit, go back to list
+  router.push('/community')
+}
 </script>
+
+<style scoped>
+.post-create-page { width:100%; margin:0 auto; padding:40px 16px; }
+.page-header { text-align:center; margin:60px 0 }
+.page-header h1 { font-size:28px; margin:0; color:#072B57 }
+.page-header .subtitle { margin-top:8px; color:#64748b }
+.form-card { width:100%; max-width:2080px; margin:0 auto; background:white; border-radius:12px; padding:28px; box-shadow:0 12px 30px rgba(15,23,42,0.06); border:1px solid rgba(15,23,42,0.04); display:flex; flex-direction:column; height:60vh }
+.field { display:block; margin-bottom:18px; position:relative }
+.title-field { margin-bottom:12px }
+.body-field { flex:1; display:flex; flex-direction:column; margin-bottom:12px }
+.body-field textarea { flex:1; min-height:0; overflow:auto }
+.password-field { margin-top:0 }
+.field-label { margin-bottom:8px; color:#475569 }
+.field input, .field textarea { width:100%; padding:12px 14px; border:1px solid #e6eef6; border-radius:8px; font-size:14px; resize:none; }
+.char-count { position:absolute; right:14px; bottom:8px; font-size:12px; color:#94a3b8 }
+.actions { display:flex; justify-content:flex-end; gap:12px; margin-top:12px }
+.btn { padding:10px 18px; border-radius:8px; border:none; cursor:pointer }
+.btn.cancel { background:transparent; border:1px solid #e6eef6 }
+.btn.primary { background:#2563EB; color:white }
+
+@media (max-width:768px) {
+  .form-card { padding:20px; height:auto }
+  .page-header { margin:0 0 }
+}
+</style>
