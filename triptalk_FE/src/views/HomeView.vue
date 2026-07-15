@@ -11,7 +11,7 @@
     </section>
 
     <section class="category-grid">
-      <button class="category-card" v-for="category in categories" :key="category.id">
+      <button class="category-card" v-for="category in categories" :key="category.id" @click="goToCategory(category.id)">
         <span class="icon" aria-hidden="true">{{ category.icon }}</span>
         <strong class="category-title font-800">{{ category.title }}</strong>
         <span class="category-subtitle font-400">{{ category.subtitle }}</span>
@@ -21,6 +21,9 @@
 </template>
 
 <script setup>
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
 const categories = [
   { id: 'sight', title: '관광지', subtitle: '핫플부터 숨은 명소까지', icon: '🗺️' },
   { id: 'leports', title: '레포츠', subtitle: '액티브한 여행을 즐겨요', icon: '🏄' },
@@ -31,6 +34,10 @@ const categories = [
   { id: 'food', title: '음식점', subtitle: '지역 맛집을 한눈에', icon: '🍜' },
   { id: 'festival', title: '축제공연행사', subtitle: '지금 열리는 행사 확인', icon: '🎉' }
 ]
+
+function goToCategory(categoryId) {
+  router.push({ name: 'Category', params: { id: categoryId } })
+}
 </script>
 
 <style scoped>
