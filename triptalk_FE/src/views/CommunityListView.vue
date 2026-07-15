@@ -17,7 +17,7 @@
           🔍
         </button>
       </div>
-      <button class="write-button font-400">글쓰기</button>
+      <button class="write-button font-400" @click="goToCreate">글쓰기</button>
     </div>
 
     <div class="filter-chips">
@@ -76,6 +76,10 @@ const boardTitle = computed(() => {
 
 function goToMap() {
   router.push({ name: 'Category', params: { id: 'jeonju' } })
+}
+
+function goToCreate() {
+  router.push({ name: 'PostCreate', query: { contentTypeId: contentTypeId.value } })
 }
 
 function selectSort(keyword) {

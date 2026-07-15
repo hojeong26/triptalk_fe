@@ -24,8 +24,8 @@
       </label>
 
       <div class="actions">
-        <button type="button" class="btn cancel font-400" @click="onCancel">취소</button>
-        <button type="submit" class="btn primary font-400">작성하기</button>
+        <button type="button" class="btn cancel font-400" @click="onCancel" :disabled="isSubmitting">취소</button>
+        <button type="submit" class="btn primary font-400" :disabled="isSubmitting">{{ isSubmitting ? '작성 중...' : '작성하기' }}</button>
       </div>
     </form>
   </section>
@@ -33,18 +33,22 @@
 
 <script setup>
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
+import { apiClient } from '../services/apiClient'
 
 const router = useRouter()
+const route = useRoute()
 const title = ref('')
 const body = ref('')
 const password = ref('')
+const isSubmitting = ref(false)
 
 function onCancel() {
-  router.push('/community')
+  const contentTypeId = Number(route.query.contentTypeId || 39)
+  router.push({ name: 'Community', query: { contentTypeId } })
 }
 
-function handleSubmit() {
+async function handleSubmit() {
   // basic validation
   if (!title.value.trim()) {
     alert('제목을 입력해 주세요.')
@@ -54,11 +58,35 @@ function handleSubmit() {
     alert('본문을 입력해 주세요.')
     return
   }
+  if (!password.value.trim()) {
+    alert('비밀번호를 입력해 주세요.')
+    return
+  }
 
-  // here you would send the data to API
-  console.log({ title: title.value, body: body.value, password: password.value })
-  // after submit, go back to list
-  router.push('/community')
+  const contentTypeId = Number(route.query.contentTypeId || 39)
+
+  isSubmitting.value = true
+  try {
+    const { data } = await apiClient.post('/posts', {
+      title: title.value.trim(),
+      content: body.value.trim(),
+      password: password.value,
+      contentTypeId
+    })
+
+    const createdPostId = Number(data?.postId)
+    if (Number.isNaN(createdPostId)) {
+      throw new Error('게시글 생성 응답이 올바르지 않습니다.')
+    }
+
+    alert(data?.message || '게시글이 생성되었습니다.')
+    router.push({ name: 'PostDetail', params: { id: createdPostId } })
+  } catch (err) {
+    console.error(err)
+    alert('게시글 생성에 실패했습니다.')
+  } finally {
+    isSubmitting.value = false
+  }
 }
 </script>
 
@@ -80,6 +108,7 @@ function handleSubmit() {
 .btn { padding:10px 18px; border-radius:8px; border:none; cursor:pointer }
 .btn.cancel { background:transparent; border:1px solid #e6eef6 }
 .btn.primary { background:#2563EB; color:white }
+.btn:disabled { opacity: 0.6; cursor: not-allowed }
 
 @media (max-width:768px) {
   .form-card { padding:20px; height:auto }

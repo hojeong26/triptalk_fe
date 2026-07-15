@@ -134,6 +134,15 @@
       "likeCount": 25,
       "createAt": "2026-07-01T06:40:01.445566",
       "viewCount": 171
+    },
+    {
+      "postId": 16,
+      "contentTypeId": 38,
+      "title": "안녕",
+      "content": "여러분 좋은밤되세요~~",
+      "likeCount": 0,
+      "createAt": "2026-07-15T16:42:14.405Z",
+      "viewCount": 0
     }
   ],
   "nextCursor": 100,

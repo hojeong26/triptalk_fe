@@ -9,6 +9,56 @@ export default defineConfig({
     name: 'mock-api',
     configureServer(server) {
       server.middlewares.use((req, res, next) => {
+        if (req.method === 'POST' && req.url === '/posts') {
+          let body = ''
+          req.on('data', (chunk) => {
+            body += chunk
+          })
+
+          req.on('end', () => {
+            try {
+              const payload = JSON.parse(body || '{}')
+              const title = String(payload.title || '').trim()
+              const content = String(payload.content || '').trim()
+              const password = String(payload.password || '').trim()
+              const contentTypeId = Number(payload.contentTypeId)
+
+              if (!title || !content || !password || Number.isNaN(contentTypeId)) {
+                res.statusCode = 400
+                res.setHeader('Content-Type', 'application/json')
+                res.end(JSON.stringify({ message: '요청 값이 올바르지 않습니다.' }))
+                return
+              }
+
+              const mockPosts = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'mock/posts.json'), 'utf8'))
+              const nextPostId = (mockPosts.posts[mockPosts.posts.length - 1]?.postId || 0) + 1
+              const createdPost = {
+                postId: nextPostId,
+                contentTypeId,
+                title,
+                content,
+                likeCount: 0,
+                createAt: new Date().toISOString(),
+                viewCount: 0
+              }
+
+              mockPosts.posts.push(createdPost)
+              fs.writeFileSync(path.resolve(__dirname, 'mock/posts.json'), JSON.stringify(mockPosts, null, 2), 'utf8')
+
+              res.setHeader('Content-Type', 'application/json')
+              res.end(JSON.stringify({
+                postId: nextPostId,
+                message: '게시글 생성 성공'
+              }))
+            } catch (error) {
+              res.statusCode = 400
+              res.setHeader('Content-Type', 'application/json')
+              res.end(JSON.stringify({ message: '요청 본문 파싱에 실패했습니다.' }))
+            }
+          })
+          return
+        }
+
         const postDetailMatch = req.url?.match(/^\/posts\/(\d+)(\?.*)?$/)
         if (postDetailMatch) {
           const mockPosts = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'mock/posts.json'), 'utf8'))
