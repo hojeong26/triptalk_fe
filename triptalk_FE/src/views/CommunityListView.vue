@@ -3,26 +3,26 @@
     <header class="community-header">
       <div class="community-header-left">
         <div class="community-title-wrap">
-          <strong>맛집 게시판</strong>
-          <span>여행자들의 생생한 추천 글을 만나보세요</span>
+          <strong class="font-800">맛집 게시판</strong>
+          <span class="font-400">여행자들의 생생한 추천 글을 만나보세요</span>
         </div>
       </div>
-      <button class="map-button">지도 보러 가기</button>
+      <button class="map-button font-400">지도 보러 가기</button>
     </header>
 
     <div class="search-area">
       <div class="search-box">
-        <input type="text" placeholder="검색어를 입력해보세요" />
+        <input type="text" placeholder="검색어를 입력해보세요" class="font-400"/>
         <button class="search-icon" aria-label="검색">
           🔍
         </button>
       </div>
-      <button class="write-button">글쓰기</button>
+      <button class="write-button font-400">글쓰기</button>
     </div>
 
     <div class="filter-chips">
-      <button class="chip active">최신순</button>
-      <button class="chip">추천순</button>
+      <button class="chip active font-400">최신순</button>
+      <button class="chip font-400">추천순</button>
     </div>
 
     <div class="post-list">

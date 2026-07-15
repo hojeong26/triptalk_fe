@@ -1,6 +1,6 @@
 <template>
   <div class="home-page">
-    <section class="hero">
+    <section class="hero font-500">
       <h1>
         <span class="hero-emphasis">어디로</span>
         <span class="hero-accent">떠나볼까요?</span>
@@ -13,8 +13,8 @@
     <section class="category-grid">
       <button class="category-card" v-for="category in categories" :key="category.id">
         <span class="icon" aria-hidden="true">{{ category.icon }}</span>
-        <strong class="category-title">{{ category.title }}</strong>
-        <span class="category-subtitle">{{ category.subtitle }}</span>
+        <strong class="category-title font-800">{{ category.title }}</strong>
+        <span class="category-subtitle font-400">{{ category.subtitle }}</span>
       </button>
     </section>
   </div>

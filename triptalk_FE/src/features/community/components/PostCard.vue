@@ -1,8 +1,8 @@
 <template>
   <article class="post-card">
     <div class="post-top">
-      <h3>{{ title }}</h3>
-      <div class="post-stats">
+      <h3 class="font-800">{{ title }}</h3>
+      <div class="post-stats font-300">
         <span class="stat">
           <FontAwesomeIcon :icon="['far', 'heart']" />
           <strong>{{ likes }}</strong>
@@ -13,8 +13,8 @@
         </span>
       </div>
     </div>
-    <p class="excerpt">{{ excerpt }}</p>
-    <p class="post-date">{{ date }}</p>
+    <p class="excerpt font-300">{{ excerpt }}</p>
+    <p class="post-date font-300">{{ date }}</p>
   </article>
 </template>
 

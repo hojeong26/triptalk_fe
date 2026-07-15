@@ -1,31 +1,31 @@
 <template>
   <section class="post-create-page">
     <header class="page-header">
-      <h1>글쓰기</h1>
-      <p class="subtitle">여러분의 경험을 공유해 주세요.</p>
+      <h1 class="font-800">글쓰기</h1>
+      <p class="subtitle font-300">여러분의 경험을 공유해 주세요.</p>
     </header>
 
-    <form class="form-card" @submit.prevent="handleSubmit">
+    <form class="form-card font-500" @submit.prevent="handleSubmit">
       <label class="field title-field">
         <div class="field-label">제목</div>
-        <input v-model="title" maxlength="100" placeholder="제목을 입력해주세요." />
+        <input v-model="title" maxlength="100" placeholder="제목을 입력해주세요." class="font-300"/>
         <div class="char-count">{{ title.length }} / 100</div>
       </label>
 
       <label class="field body-field">
         <div class="field-label">본문</div>
-        <textarea v-model="body" rows="8" maxlength="3000" placeholder="내용을 입력해주세요. (사진은 등록할 수 없습니다.)"></textarea>
+        <textarea class="font-300" v-model="body" rows="8" maxlength="3000" placeholder="내용을 입력해주세요. (사진은 등록할 수 없습니다.)"></textarea>
         <div class="char-count">{{ body.length }} / 3000</div>
       </label>
 
       <label class="field password-field">
         <div class="field-label">비밀번호</div>
-        <input v-model="password" type="password" placeholder="게시글 수정/삭제 시 필요한 비밀번호를 입력해주세요." />
+        <input class="font-300" v-model="password" type="password" placeholder="게시글 수정/삭제 시 필요한 비밀번호를 입력해주세요." />
       </label>
 
       <div class="actions">
-        <button type="button" class="btn cancel" @click="onCancel">취소</button>
-        <button type="submit" class="btn primary">작성하기</button>
+        <button type="button" class="btn cancel font-400" @click="onCancel">취소</button>
+        <button type="submit" class="btn primary font-400">작성하기</button>
       </div>
     </form>
   </section>

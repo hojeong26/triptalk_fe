@@ -1,6 +1,6 @@
 <template>
   <header class="site-header">
-    <div class="container header-inner">
+    <div class="container header-inner font-800">
       <div class="brand">
         <span class="pin" aria-hidden>
           <!-- simple map pin svg, blue fill -->
