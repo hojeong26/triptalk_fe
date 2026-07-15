@@ -11,7 +11,6 @@ const PostEditView = () => import('../views/PostEditView.vue')
 const routes = [
 	{ path: '/', name: 'Home', component: HomeView },
 	{ path: '/category/:id', name: 'Category', component: CategoryView },
-	{ path: '/map', name: 'Map', component: MapView },
 	{ path: '/community', name: 'Community', component: CommunityListView },
 	{ path: '/community/:board', name: 'CommunityBoard', component: CommunityListView },
 	{ path: '/post/new', name: 'PostCreate', component: PostCreateView },

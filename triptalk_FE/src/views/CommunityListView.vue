@@ -7,7 +7,7 @@
           <span class="font-400">여행자들의 생생한 추천 글을 만나보세요</span>
         </div>
       </div>
-      <button class="map-button font-400">지도 보러 가기</button>
+      <button class="map-button font-400" @click="goToMap">지도 보러 가기</button>
     </header>
 
     <div class="search-area">
@@ -41,7 +41,14 @@
 </template>
 
 <script setup>
+import { useRouter } from 'vue-router'
 import PostCard from '../features/community/components/PostCard.vue'
+
+const router = useRouter()
+
+function goToMap() {
+  router.push({ name: 'Category', params: { id: 'jeonju' } })
+}
 
 const posts = [
   {
@@ -123,6 +130,10 @@ const posts = [
   padding: 12px 20px;
   border-radius: 999px;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
 }
 .search-area { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; }
 .search-box {
