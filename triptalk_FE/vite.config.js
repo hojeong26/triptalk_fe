@@ -9,6 +9,34 @@ export default defineConfig({
     name: 'mock-api',
     configureServer(server) {
       server.middlewares.use((req, res, next) => {
+        const postDetailMatch = req.url?.match(/^\/posts\/(\d+)(\?.*)?$/)
+        if (postDetailMatch) {
+          const mockPosts = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'mock/posts.json'), 'utf8'))
+          const postId = Number(postDetailMatch[1])
+          const foundPost = mockPosts.posts.find((post) => Number(post.postId) === postId)
+
+          if (!foundPost) {
+            res.statusCode = 404
+            res.setHeader('Content-Type', 'application/json')
+            res.end(JSON.stringify({ message: '게시글을 찾을 수 없습니다.' }))
+            return
+          }
+
+          const response = {
+            postId: foundPost.postId,
+            contentTypeId: foundPost.contentTypeId,
+            title: foundPost.title,
+            content: foundPost.content,
+            likeCount: foundPost.likeCount,
+            viewCount: foundPost.viewCount,
+            createdAt: foundPost.createdAt || foundPost.createAt || ''
+          }
+
+          res.setHeader('Content-Type', 'application/json')
+          res.end(JSON.stringify(response))
+          return
+        }
+
         if (req.url?.startsWith('/locations')) {
           const db = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'mock/db.json'), 'utf8'))
           const url = new URL(req.url, 'http://localhost')

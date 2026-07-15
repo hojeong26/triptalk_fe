@@ -9,23 +9,25 @@
           <div class="post-stats">
             <span class="stat font-300">
               <FontAwesomeIcon :icon="['far', 'heart']" />
-              {{ post.likes }}
+              {{ post.likeCount }}
             </span>
             <span class="stat font-300">
               <FontAwesomeIcon :icon="['fas', 'eye']" />
-              {{ post.views }}
+              {{ post.viewCount }}
             </span>
           </div>
         </div>
 
         <!-- 날짜 -->
-        <div class="post-date font-300">{{ formatDate(post.date) }}</div>
+        <div class="post-date font-300">{{ formatDate(post.createdAt) }}</div>
 
         <!-- 본문 -->
         <div class="post-content font-400">
-          <p>{{ post.excerpt }}</p>
-          <p>{{ post.fullContent }}</p>
+          <p>{{ post.content }}</p>
         </div>
+
+        <div v-if="isLoading" class="load-status font-300">게시글을 불러오는 중입니다...</div>
+        <div v-else-if="errorMessage" class="load-status error font-300">{{ errorMessage }}</div>
 
         <!-- 하단: 버튼 -->
         <div class="post-footer">
@@ -73,75 +75,70 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+import { apiClient } from '../services/apiClient'
 
 const router = useRouter()
 const route = useRoute()
 
 const post = ref({
-  id: 0,
+  postId: 0,
+  contentTypeId: 0,
   title: '',
-  excerpt: '',
-  fullContent: '',
-  date: '',
-  views: 0,
-  likes: 0,
-  password: '1234' // 실제로는 백엔드에서 해시 비교
+  content: '',
+  likeCount: 0,
+  viewCount: 0,
+  createdAt: ''
 })
 
 const isLiked = ref(false)
 const showPasswordModal = ref(false)
 const password = ref('')
 const showPassword = ref(false)
+const isLoading = ref(false)
+const errorMessage = ref('')
+const localEditPassword = '1234'
 
-// 게시글 데이터 로드
-onMounted(() => {
-  const postId = parseInt(route.params.id)
-  // 실제로는 API에서 데이터를 가져옵니다
-  // 지금은 목 데이터를 사용합니다
-  const mockPosts = [
-    {
-      id: 1,
-      title: '현지인이 추천하는 진짜 국밥집',
-      excerpt: '여기 국밥 진짜 맛있어요! 현지인들도 줄 서서 먹는 맛집입니다.',
-      fullContent: '국밥은 따뜻한 국물에 밥을 말아먹는 음식입니다. 이곳의 국밥은 정말 특별한데, 국물이 깊은 맛이 나고 돼지고기도 부드러워요. 강력 추천합니다!',
-      date: '2026-05-12',
-      views: 102,
-      likes: 24,
-      password: '1234'
-    },
-    {
-      id: 2,
-      title: '분위기 좋은 강남 카페 추천',
-      excerpt: '인테리어도 예쁘고 커피도 맛있는 카페를 찾아보았어요.',
-      fullContent: '이 카페는 강남역 근처에 있으며, 모던한 인테리어가 특징입니다. 커피는 싱글 오리진을 사용하며, 바리스타의 실력도 뛰어나요. 조용한 분위기에서 업무나 공부를 하기 좋습니다.',
-      date: '2026-05-11',
-      views: 85,
-      likes: 17,
-      password: '1234'
-    },
-    {
-      id: 3,
-      title: '가성비 좋은 양식 레스토랑',
-      excerpt: '가성비 대비 음식 퀄리티가 정말 좋아요. 데이트 장소로 추천합니다!',
-      fullContent: '양식 레스토랑인데 가격대는 합리적이고 음식 퀄리티는 정말 좋습니다. 파스타, 스테이크, 해산물 등 다양한 메뉴가 있으며, 와인 페어링도 가능합니다. 데이트 추천!',
-      date: '2026-05-10',
-      views: 78,
-      likes: 15,
-      password: '1234'
-    }
-  ]
-
-  const found = mockPosts.find(p => p.id === postId)
-  if (found) {
-    post.value = found
+function normalizePostDetail(data) {
+  return {
+    postId: Number(data?.postId || 0),
+    contentTypeId: Number(data?.contentTypeId || 0),
+    title: data?.title || '제목 없음',
+    content: data?.content || '',
+    likeCount: Number(data?.likeCount || 0),
+    viewCount: Number(data?.viewCount || 0),
+    createdAt: data?.createdAt || data?.createAt || ''
   }
+}
+
+async function fetchPostDetail() {
+  const postId = Number(route.params.id)
+  if (Number.isNaN(postId)) {
+    errorMessage.value = '잘못된 게시글 ID입니다.'
+    return
+  }
+
+  isLoading.value = true
+  errorMessage.value = ''
+  try {
+    const { data } = await apiClient.get(`/posts/${postId}`)
+    post.value = normalizePostDetail(data)
+  } catch (err) {
+    console.error(err)
+    errorMessage.value = '게시글을 불러오지 못했습니다.'
+  } finally {
+    isLoading.value = false
+  }
+}
+
+onMounted(() => {
+  fetchPostDetail()
 })
 
 const goBack = () => {
-  router.push({ name: 'Community' })
+  router.push({ name: 'Community', query: { contentTypeId: post.value.contentTypeId || undefined } })
 }
 
 const openPasswordModal = () => {
@@ -157,10 +154,9 @@ const closePasswordModal = () => {
 }
 
 const verifyPassword = () => {
-  // 실제로는 백엔드에 비밀번호를 보내서 검증합니다
-  if (password.value === post.value.password) {
+  if (password.value === localEditPassword) {
     closePasswordModal()
-    router.push({ name: 'PostEdit', params: { id: post.value.id } })
+    router.push({ name: 'PostEdit', params: { id: post.value.postId } })
   } else {
     alert('비밀번호가 일치하지 않습니다.')
     password.value = ''
@@ -172,7 +168,9 @@ const toggleLike = () => {
 }
 
 const formatDate = (dateStr) => {
+  if (!dateStr) return ''
   const date = new Date(dateStr)
+  if (Number.isNaN(date.getTime())) return String(dateStr).split('T')[0] || ''
   return date.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })
 }
 </script>
@@ -258,6 +256,15 @@ const formatDate = (dateStr) => {
 
 .post-content p:last-child {
   margin-bottom: 0;
+}
+
+.load-status {
+  margin-bottom: 20px;
+  color: #64748b;
+}
+
+.load-status.error {
+  color: #dc2626;
 }
 
 .post-footer {
