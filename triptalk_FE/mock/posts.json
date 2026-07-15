@@ -143,16 +143,6 @@
       "likeCount": 0,
       "createAt": "2026-07-15T16:42:14.405Z",
       "viewCount": 0
-    },
-    {
-      "postId": 17,
-      "contentTypeId": 12,
-      "title": "안녕하세요",
-      "content": "안뇽하십시오요~~~!!!",
-      "password": "0926",
-      "likeCount": 0,
-      "createAt": "2026-07-15T16:50:13.456Z",
-      "viewCount": 0
     }
   ],
   "nextCursor": 100,

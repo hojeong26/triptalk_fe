@@ -22,10 +22,10 @@
       </label>
 
       <div class="actions">
-        <button type="button" class="btn danger font-400" @click="handleDelete" :disabled="isSubmitting || isLoading">삭제하기</button>
+        <button type="button" class="btn danger font-400" @click="handleDelete" :disabled="isSubmitting || isDeleting || isLoading">{{ isDeleting ? '삭제 중...' : '삭제하기' }}</button>
         <div class="right-actions">
-          <button type="button" class="btn cancel font-400" @click="onCancel" :disabled="isSubmitting">취소</button>
-          <button type="submit" class="btn primary font-400" :disabled="isSubmitting || isLoading">{{ isSubmitting ? '수정 중...' : '수정하기' }}</button>
+          <button type="button" class="btn cancel font-400" @click="onCancel" :disabled="isSubmitting || isDeleting">취소</button>
+          <button type="submit" class="btn primary font-400" :disabled="isSubmitting || isDeleting || isLoading">{{ isSubmitting ? '수정 중...' : '수정하기' }}</button>
         </div>
       </div>
     </form>
@@ -45,6 +45,7 @@ const body = ref('')
 const contentTypeId = ref(undefined)
 const isLoading = ref(false)
 const isSubmitting = ref(false)
+const isDeleting = ref(false)
 const errorMessage = ref('')
 
 function normalizePostDetail(data) {
@@ -87,12 +88,22 @@ function onCancel() {
   router.push({ name: 'PostDetail', params: { id: route.params.id } })
 }
 
-function handleDelete() {
+async function handleDelete() {
   const shouldDelete = confirm('정말 삭제하시겠습니까?')
   if (!shouldDelete) return
 
-  // TODO: 삭제 API가 확정되면 실제 DELETE 요청으로 교체
-  router.push({ name: 'Community', query: { contentTypeId: contentTypeId.value } })
+  isDeleting.value = true
+  try {
+    const postId = Number(route.params.id)
+    const { data } = await apiClient.delete(`/posts/${postId}`)
+    alert(data?.message || '게시글 삭제 성공')
+    router.push({ name: 'Community', query: { contentTypeId: contentTypeId.value } })
+  } catch (err) {
+    console.error(err)
+    alert('게시글 삭제에 실패했습니다.')
+  } finally {
+    isDeleting.value = false
+  }
 }
 
 async function handleSubmit() {

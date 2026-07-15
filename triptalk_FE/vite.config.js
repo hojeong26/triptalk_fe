@@ -49,6 +49,33 @@ export default defineConfig({
         }
 
         const postUpdateMatch = req.url?.match(/^\/posts\/(\d+)(\?.*)?$/)
+        if (req.method === 'DELETE' && postUpdateMatch) {
+          try {
+            const postId = Number(postUpdateMatch[1])
+            const mockPostsPath = path.resolve(__dirname, 'mock/posts.json')
+            const mockPosts = JSON.parse(fs.readFileSync(mockPostsPath, 'utf8'))
+            const targetIndex = mockPosts.posts.findIndex((post) => Number(post.postId) === postId)
+
+            if (targetIndex < 0) {
+              res.statusCode = 404
+              res.setHeader('Content-Type', 'application/json')
+              res.end(JSON.stringify({ message: '게시글을 찾을 수 없습니다.' }))
+              return
+            }
+
+            mockPosts.posts.splice(targetIndex, 1)
+            fs.writeFileSync(mockPostsPath, JSON.stringify(mockPosts, null, 2), 'utf8')
+
+            res.setHeader('Content-Type', 'application/json')
+            res.end(JSON.stringify({ message: '게시글 삭제 성공' }))
+          } catch (error) {
+            res.statusCode = 400
+            res.setHeader('Content-Type', 'application/json')
+            res.end(JSON.stringify({ message: '게시글 삭제 처리에 실패했습니다.' }))
+          }
+          return
+        }
+
         if (req.method === 'PUT' && postUpdateMatch) {
           let body = ''
           req.on('data', (chunk) => {
