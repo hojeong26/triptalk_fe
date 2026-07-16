@@ -437,6 +437,13 @@ const formatDate = (dateStr) => {
   transition: border-color 0.2s;
 }
 
+.password-input::-ms-clear,
+.password-input::-ms-reveal,
+.password-input::-webkit-password-toggle-button,
+.password-input::-webkit-textfield-decoration-container {
+  display: none !important;
+}
+
 .password-input:focus {
   outline: none;
   border-color: #0f5a9f;
