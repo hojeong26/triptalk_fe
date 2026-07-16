@@ -172,7 +172,7 @@ function requestLocations() {
   isLoading.value = true
   errorMessage.value = ''
 
-  return apiClient.get('/locations', {
+  return apiClient.get('http://localhost:8000/locations', {
     params: {
       contentTypeId: contentTypeId.value,
       areaCode: regionMeta.areaCode,

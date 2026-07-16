@@ -14,7 +14,24 @@
 
       <div class="chat-body">
         <div v-for="message in messages" :key="message.id" :class="['bubble', message.role]">
-          {{ message.text }}
+          <template v-if="message.role === 'assistant'">
+            <template v-for="(block, index) in parseMessage(message.text)" :key="index">
+              <div v-if="block.type === 'paragraph'" class="assistant-paragraph">{{ block.text }}</div>
+
+              <div v-else-if="block.type === 'list'" class="assistant-list">
+                <div v-for="item in block.items" :key="item.number" class="assistant-list-item">
+                  <div class="assistant-list-item-text">
+                    <div class="assistant-list-item-title">{{ item.number }}. {{ item.name }}</div>
+                    <div class="assistant-list-item-address">{{ item.address }}</div>
+                  </div>
+                  <img v-if="item.imageUrl" :src="item.imageUrl" alt="이미지" class="assistant-list-item-image" />
+                </div>
+              </div>
+            </template>
+          </template>
+          <template v-else>
+            {{ message.text }}
+          </template>
         </div>
       </div>
 
@@ -25,6 +42,7 @@
     </div>
   </div>
 </template>
+
 
 <script setup>
 import { ref } from 'vue'
@@ -41,6 +59,85 @@ const messages = ref([
   }
 ])
 
+function parseMessage(rawText) {
+  const lines = rawText.split(/\r?\n/)
+  const blocks = []
+  let currentList = null
+
+  const listItemRegex = /^\s(\d+).\s(.+?)\s-\s(.+?)\s(?:![이미지]((https?:\/\/[^)]+)))?\s$/
+  const imageOnlyRegex = /^![이미지]((https?:\/\/[^)]+))$/
+
+  for (const line of lines) {
+    if (!line.trim()) {
+      if (currentList) {
+        blocks.push(currentList)
+        currentList = null
+      }
+      continue
+    }
+
+    const listMatch = line.match(listItemRegex)
+    if (listMatch) {
+      const number = listMatch[1]
+      const name = listMatch[2].trim()
+      const address = listMatch[3].trim()
+      const imageUrl = listMatch[4] ? listMatch[4].trim() : ''
+
+      if (!currentList) {
+        currentList = {
+          type: 'list',
+          items: []
+        }
+      }
+
+      currentList.items.push({ number, name, address, imageUrl })
+      continue
+    }
+
+    const imageMatch = line.match(imageOnlyRegex)
+    if (imageMatch && currentList?.items?.length) {
+      currentList.items[currentList.items.length - 1].imageUrl = imageMatch[1].trim()
+      continue
+    }
+
+    if (currentList) {
+      blocks.push(currentList)
+      currentList = null
+    }
+
+    blocks.push({ type: 'paragraph', text: line.trim() })
+  }
+
+  if (currentList) {
+    blocks.push(currentList)
+  }
+
+  return blocks
+}
+
+function safeStringify(value) {
+  try {
+    return JSON.stringify(value)
+  } catch {
+    return String(value)
+  }
+}
+
+function extractChatReply(data) {
+  if (typeof data === 'string') return data
+  if (!data) return ''
+  if (typeof data.answer === 'string' && data.answer.trim()) return data.answer
+  if (typeof data.message === 'string' && data.message.trim()) return data.message
+  if (typeof data.result === 'string' && data.result.trim()) return data.result
+  if (typeof data.response === 'string' && data.response.trim()) return data.response
+  if (typeof data.data === 'string' && data.data.trim()) return data.data
+  const stringFields = ['answer', 'message', 'result', 'response', 'data']
+    .map((key) => ({ key, value: data[key] }))
+    .filter((entry) => typeof entry.value === 'string' && entry.value.trim())
+  if (stringFields.length) return stringFields[0].value
+  return safeStringify(data)
+}
+
 async function sendMessage() {
   const text = draft.value.trim()
   if (!text || isSending.value) return
@@ -56,7 +153,10 @@ async function sendMessage() {
 
   try {
     const { data } = await apiClient.post('/api/chat', { question: text })
-    const reply = data?.answer || data?.message || '서버 응답을 받지 못했습니다.'
+    console.log('[ChatPanel] chat response', data)
+
+    const reply = extractChatReply(data)
+      || '서버 응답을 받지 못했습니다.'
 
     messages.value.push({
       id: Date.now() + 1,
@@ -64,17 +164,25 @@ async function sendMessage() {
       text: reply
     })
   } catch (error) {
-    console.error(error)
+    console.error('[ChatPanel] chat error', error)
+    const serverDetail =
+      error?.response?.data?.message ||
+      error?.response?.data ||
+      error?.response?.statusText ||
+      error?.message ||
+      ''
+
     messages.value.push({
       id: Date.now() + 1,
       role: 'assistant',
-      text: '챗봇 응답을 가져오는 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'
+      text: `챗봇 응답을 가져오는 중 오류가 발생했습니다.${serverDetail ? ' (' + serverDetail + ')' : ''}`
     })
   } finally {
     isSending.value = false
   }
 }
 </script>
+
 
 <style scoped>
 .chat-overlay {
@@ -165,6 +273,49 @@ async function sendMessage() {
   background: white;
   color: #0f172a;
   box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+}
+
+.assistant-paragraph {
+  margin-bottom: 12px;
+}
+
+.assistant-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.assistant-list-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  background: #f8fafc;
+}
+
+.assistant-list-item-text {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.assistant-list-item-title {
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.assistant-list-item-address {
+  color: #475569;
+  font-size: 0.9rem;
+}
+
+.assistant-list-item-image {
+  width: 120px;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 12px;
 }
 
 .bubble.user {
