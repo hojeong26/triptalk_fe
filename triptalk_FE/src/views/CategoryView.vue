@@ -148,7 +148,11 @@ function normalizePlace(item) {
 }
 
 function inferRegionFromCoordinates(latitude, longitude) {
-  if (latitude >= 35.05 && latitude <= 35.22 && longitude >= 126.74 && longitude <= 126.98) return { province: 'gwangju', region: 'seogu' }
+  if (latitude >= 35.10 && latitude <= 35.22 && longitude >= 126.74 && longitude <= 126.84) return { province: 'gwangju', region: 'gwangsangu' }
+  if (latitude >= 35.12 && latitude <= 35.18 && longitude >= 126.86 && longitude <= 126.95) return { province: 'gwangju', region: 'seogu' }
+  if (latitude >= 35.13 && latitude <= 35.18 && longitude >= 126.90 && longitude <= 127.00) return { province: 'gwangju', region: 'donggu' }
+  if (latitude >= 35.13 && latitude <= 35.18 && longitude >= 126.88 && longitude <= 126.92) return { province: 'gwangju', region: 'namgu' }
+  if (latitude >= 35.16 && latitude <= 35.20 && longitude >= 126.90 && longitude <= 126.95) return { province: 'gwangju', region: 'bukgu' }
   if (latitude >= 35.70 && latitude <= 36.05 && longitude >= 126.80 && longitude <= 127.20) return { province: 'jeollabukdo', region: 'jeonju' }
   if (latitude >= 35.92 && latitude <= 36.02 && longitude >= 126.55 && longitude <= 126.80) return { province: 'jeollabukdo', region: 'gunsan' }
   if (latitude >= 35.90 && latitude <= 36.00 && longitude >= 126.90 && longitude <= 127.20) return { province: 'jeollabukdo', region: 'iksan' }
