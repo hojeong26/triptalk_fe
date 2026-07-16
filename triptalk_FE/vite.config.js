@@ -245,7 +245,7 @@ export default defineConfig({
 
         if (req.url?.startsWith('/locations')) {
           const db = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'mock/db.json'), 'utf8'))
-          const url = new URL(req.url, 'http://localhost')
+          const url = new URL(req.url, 'https://triptalk-be.onrender.com')
           const contentTypeId = Number(url.searchParams.get('contentTypeId') || 12)
           const areaCode = Number(url.searchParams.get('areaCode'))
           const sigunguCode = Number(url.searchParams.get('sigunguCode'))
@@ -264,7 +264,7 @@ export default defineConfig({
 
         if (req.url?.startsWith('/posts')) {
           const mockPosts = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'mock/posts.json'), 'utf8'))
-          const url = new URL(req.url, 'http://localhost')
+          const url = new URL(req.url, 'https://triptalk-be.onrender.com')
           const keyword = url.searchParams.get('keyword') || '최신순'
           const contentTypeId = Number(url.searchParams.get('contentTypeId'))
           const size = Number(url.searchParams.get('size') || 10)
