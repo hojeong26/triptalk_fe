@@ -86,7 +86,7 @@ async function sendMessage() {
 
 .chat-panel {
   width: min(360px, calc(100vw - 32px));
-  height: min(520px, calc(100vh - 120px));
+  height: min(620px, calc(100vh - 120px));
   display: flex;
   flex-direction: column;
   background: white;
