@@ -28,9 +28,11 @@
 
 <script setup>
 import { ref } from 'vue'
+import { apiClient } from '../../services/apiClient'
 
 const emit = defineEmits(['close'])
 const draft = ref('')
+const isSending = ref(false)
 const messages = ref([
   {
     id: 1,
@@ -39,9 +41,9 @@ const messages = ref([
   }
 ])
 
-function sendMessage() {
+async function sendMessage() {
   const text = draft.value.trim()
-  if (!text) return
+  if (!text || isSending.value) return
 
   messages.value.push({
     id: Date.now(),
@@ -50,14 +52,27 @@ function sendMessage() {
   })
 
   draft.value = ''
+  isSending.value = true
 
-  setTimeout(() => {
+  try {
+    const { data } = await apiClient.post('/api/chat', { question: text })
+    const reply = data?.answer || data?.message || '서버 응답을 받지 못했습니다.'
+
     messages.value.push({
       id: Date.now() + 1,
       role: 'assistant',
-      text: '좋아요! 잠시 후 더 자연스럽게 연결해드릴게요.'
+      text: reply
     })
-  }, 400)
+  } catch (error) {
+    console.error(error)
+    messages.value.push({
+      id: Date.now() + 1,
+      role: 'assistant',
+      text: '챗봇 응답을 가져오는 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'
+    })
+  } finally {
+    isSending.value = false
+  }
 }
 </script>
 
