@@ -12,8 +12,14 @@
 
     <div class="search-area">
       <div class="search-box">
-        <input type="text" placeholder="검색어를 입력해보세요" class="font-400"/>
-        <button class="search-icon" aria-label="검색">
+        <input
+          v-model="searchTerm"
+          type="text"
+          placeholder="검색어를 입력해보세요"
+          class="font-400"
+          @keyup.enter="fetchPosts"
+        />
+        <button class="search-icon" type="button" aria-label="검색" @click="fetchPosts">
           🔍
         </button>
       </div>
@@ -21,8 +27,8 @@
     </div>
 
     <div class="filter-chips">
-      <button class="chip font-400" :class="{ active: sortKeyword === '최신순' }" @click="selectSort('최신순')">최신순</button>
-      <button class="chip font-400" :class="{ active: sortKeyword === '추천순' }" @click="selectSort('추천순')">추천순</button>
+      <button class="chip font-400" :class="{ active: sortParam === 'latest' }" @click="selectSort('최신순')">최신순</button>
+      <button class="chip font-400" :class="{ active: sortParam === 'like' }" @click="selectSort('추천순')">추천순</button>
     </div>
 
     <div v-if="isLoading" class="status">게시글을 불러오는 중입니다...</div>
@@ -51,7 +57,9 @@ import { apiClient } from '../services/apiClient'
 const router = useRouter()
 const route = useRoute()
 const posts = ref([])
+const searchTerm = ref('')
 const sortKeyword = ref('최신순')
+const sortParam = ref('latest')
 const isLoading = ref(false)
 const errorMessage = ref('')
 const nextCursor = ref(100)
@@ -84,6 +92,7 @@ function goToCreate() {
 
 function selectSort(keyword) {
   sortKeyword.value = keyword
+  sortParam.value = keyword === '추천순' ? 'like' : 'latest'
   fetchPosts()
 }
 
@@ -116,8 +125,8 @@ async function fetchPosts() {
     const { data } = await apiClient.get('/posts', {
       params: {
         contentTypeId: contentTypeId.value,
-        keyword: sortKeyword.value,
-        sort: 'latest',
+        keyword: searchTerm.value || undefined,
+        sort: sortParam.value,
         cursor: nextCursor.value,
         size: pageSize
       }
