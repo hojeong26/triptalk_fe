@@ -15,19 +15,29 @@
       <div class="chat-body">
         <div v-for="message in messages" :key="message.id" :class="['bubble', message.role]">
           <template v-if="message.role === 'assistant'">
-            <template v-for="(block, index) in parseMessage(message.text)" :key="index">
-              <div v-if="block.type === 'paragraph'" class="assistant-paragraph">{{ block.text }}</div>
+            <div v-if="message.text" class="assistant-paragraph">{{ message.text }}</div>
 
-              <div v-else-if="block.type === 'list'" class="assistant-list">
-                <div v-for="item in block.items" :key="item.number" class="assistant-list-item">
-                  <div class="assistant-list-item-text">
-                    <div class="assistant-list-item-title">{{ item.number }}. {{ item.name }}</div>
-                    <div class="assistant-list-item-address">{{ item.address }}</div>
-                  </div>
-                  <img v-if="item.imageUrl" :src="item.imageUrl" alt="이미지" class="assistant-list-item-image" />
+            <div v-if="message.places?.length" class="assistant-card-list">
+              <article
+                v-for="(place, index) in message.places"
+                :key="place.contentId || index"
+                class="assistant-card"
+              >
+                <img
+                  v-if="place.imageUrl"
+                  :src="place.imageUrl"
+                  :alt="place.title"
+                  class="assistant-card-image"
+                />
+                <div v-else class="assistant-card-image placeholder">No Image</div>
+
+                <div class="assistant-card-content">
+                  <div class="assistant-card-title">{{ index + 1 }}. {{ place.title }}</div>
+                  <div class="assistant-card-address">{{ place.address || '주소 정보 없음' }}</div>
+                  <div v-if="place.tel" class="assistant-card-tel">{{ place.tel }}</div>
                 </div>
-              </div>
-            </template>
+              </article>
+            </div>
           </template>
           <template v-else>
             {{ message.text }}
@@ -55,64 +65,27 @@ const messages = ref([
   {
     id: 1,
     role: 'assistant',
-    text: '안녕하세요! 여행지 추천이나 일정 관련해서 무엇이든 물어보세요.'
+    text: '안녕하세요! 여행지 추천이나 일정 관련해서 무엇이든 물어보세요.',
+    places: []
   }
 ])
 
-function parseMessage(rawText) {
-  const lines = rawText.split(/\r?\n/)
-  const blocks = []
-  let currentList = null
+function normalizePlaces(rawPlaces) {
+  if (!Array.isArray(rawPlaces)) return []
 
-  const listItemRegex = /^\s(\d+).\s(.+?)\s-\s(.+?)\s(?:![이미지]((https?:\/\/[^)]+)))?\s$/
-  const imageOnlyRegex = /^![이미지]((https?:\/\/[^)]+))$/
+  return rawPlaces.map((place) => {
+    const imageUrl = place?.firstimage || place?.firstimage2 || place?.image || ''
+    const addr1 = place?.addr1 || ''
+    const addr2 = place?.addr2 || ''
 
-  for (const line of lines) {
-    if (!line.trim()) {
-      if (currentList) {
-        blocks.push(currentList)
-        currentList = null
-      }
-      continue
+    return {
+      contentId: place?.contentId || place?.contentid || '',
+      title: place?.title || place?.name || '이름 없음',
+      address: `${addr1} ${addr2}`.trim(),
+      tel: place?.tel || '',
+      imageUrl
     }
-
-    const listMatch = line.match(listItemRegex)
-    if (listMatch) {
-      const number = listMatch[1]
-      const name = listMatch[2].trim()
-      const address = listMatch[3].trim()
-      const imageUrl = listMatch[4] ? listMatch[4].trim() : ''
-
-      if (!currentList) {
-        currentList = {
-          type: 'list',
-          items: []
-        }
-      }
-
-      currentList.items.push({ number, name, address, imageUrl })
-      continue
-    }
-
-    const imageMatch = line.match(imageOnlyRegex)
-    if (imageMatch && currentList?.items?.length) {
-      currentList.items[currentList.items.length - 1].imageUrl = imageMatch[1].trim()
-      continue
-    }
-
-    if (currentList) {
-      blocks.push(currentList)
-      currentList = null
-    }
-
-    blocks.push({ type: 'paragraph', text: line.trim() })
-  }
-
-  if (currentList) {
-    blocks.push(currentList)
-  }
-
-  return blocks
+  })
 }
 
 function safeStringify(value) {
@@ -138,6 +111,11 @@ function extractChatReply(data) {
   return safeStringify(data)
 }
 
+function extractChatPlaces(data) {
+  if (!data || typeof data !== 'object') return []
+  return normalizePlaces(data.places)
+}
+
 async function sendMessage() {
   const text = draft.value.trim()
   if (!text || isSending.value) return
@@ -145,7 +123,8 @@ async function sendMessage() {
   messages.value.push({
     id: Date.now(),
     role: 'user',
-    text
+      text,
+      places: []
   })
 
   draft.value = ''
@@ -157,11 +136,13 @@ async function sendMessage() {
 
     const reply = extractChatReply(data)
       || '서버 응답을 받지 못했습니다.'
+    const places = extractChatPlaces(data)
 
     messages.value.push({
       id: Date.now() + 1,
       role: 'assistant',
-      text: reply
+      text: reply,
+      places
     })
   } catch (error) {
     console.error('[ChatPanel] chat error', error)
@@ -175,7 +156,8 @@ async function sendMessage() {
     messages.value.push({
       id: Date.now() + 1,
       role: 'assistant',
-      text: `챗봇 응답을 가져오는 중 오류가 발생했습니다.${serverDetail ? ' (' + serverDetail + ')' : ''}`
+      text: `챗봇 응답을 가져오는 중 오류가 발생했습니다.${serverDetail ? ' (' + serverDetail + ')' : ''}`,
+      places: []
     })
   } finally {
     isSending.value = false
@@ -273,49 +255,69 @@ async function sendMessage() {
   background: white;
   color: #0f172a;
   box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+  max-width: 94%;
 }
 
 .assistant-paragraph {
   margin-bottom: 12px;
 }
 
-.assistant-list {
+.assistant-card-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
-.assistant-list-item {
+.assistant-card {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: 92px minmax(0, 1fr);
   gap: 12px;
-  padding: 14px;
+  padding: 10px;
   border: 1px solid #e2e8f0;
-  border-radius: 16px;
+  border-radius: 14px;
   background: #f8fafc;
 }
 
-.assistant-list-item-text {
+.assistant-card-content {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
+  min-width: 0;
 }
 
-.assistant-list-item-title {
+.assistant-card-title {
   font-weight: 700;
   color: #0f172a;
+  line-height: 1.35;
 }
 
-.assistant-list-item-address {
+.assistant-card-address {
   color: #475569;
-  font-size: 0.9rem;
+  font-size: 0.86rem;
+  line-height: 1.35;
+  word-break: keep-all;
 }
 
-.assistant-list-item-image {
-  width: 120px;
-  height: 90px;
+.assistant-card-tel {
+  color: #2563eb;
+  font-size: 0.83rem;
+  font-weight: 600;
+}
+
+.assistant-card-image {
+  width: 92px;
+  height: 92px;
   object-fit: cover;
-  border-radius: 12px;
+  border-radius: 10px;
+  background: #e2e8f0;
+}
+
+.assistant-card-image.placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  font-size: 0.8rem;
 }
 
 .bubble.user {
