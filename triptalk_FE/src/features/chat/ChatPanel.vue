@@ -15,7 +15,7 @@
       <div class="chat-body">
         <div v-for="message in messages" :key="message.id" :class="['bubble', message.role]">
           <template v-if="message.role === 'assistant'">
-            <div v-if="message.text" class="assistant-paragraph">{{ message.text }}</div>
+            <div v-if="message.text && !message.places?.length" class="assistant-paragraph">{{ message.text }}</div>
 
             <div v-if="message.places?.length" class="assistant-card-list">
               <article
