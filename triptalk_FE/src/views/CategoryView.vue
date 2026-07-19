@@ -116,11 +116,12 @@ const provinceGroups = [
     value: 'gwangju',
     label: '광주광역시',
     regions: [
-      { value: 'donggu', label: '동구', areaCode: 5, sigunguCode: 1 },
-      { value: 'seogu', label: '서구', areaCode: 5, sigunguCode: 2 },
-      { value: 'namgu', label: '남구', areaCode: 5, sigunguCode: 3 },
+      // 데이터셋 기준 광주 sigunguCode 매핑(일반 행정코드와 순서가 다름)
+      { value: 'donggu', label: '동구', areaCode: 5, sigunguCode: 3 },
+      { value: 'seogu', label: '서구', areaCode: 5, sigunguCode: 5 },
+      { value: 'namgu', label: '남구', areaCode: 5, sigunguCode: 2 },
       { value: 'bukgu', label: '북구', areaCode: 5, sigunguCode: 4 },
-      { value: 'gwangsangu', label: '광산구', areaCode: 5, sigunguCode: 5 }
+      { value: 'gwangsangu', label: '광산구', areaCode: 5, sigunguCode: 1 }
     ]
   }
 ]
